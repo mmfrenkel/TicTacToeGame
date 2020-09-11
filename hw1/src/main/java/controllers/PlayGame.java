@@ -1,6 +1,7 @@
 package controllers;
 
 import io.javalin.Javalin;
+import static io.javalin.apibuilder.ApiBuilder.get;
 import java.io.IOException;
 import java.util.Queue;
 import org.eclipse.jetty.websocket.api.Session;
@@ -23,39 +24,20 @@ class PlayGame {
 	public static void main(final String[] args) {
 
 		logger.info("Starting application...");
+		TicTacToeController tttcontroller = new TicTacToeController();
 		
 		app = Javalin.create(config -> {
 			config.addStaticFiles("/public");
+			config.enableDevLogging();
 		}).start(PORT_NUMBER);
 
-		// Test Echo Server
-		app.post("/echo", ctx -> {
-			ctx.result(ctx.body());
+        app.routes(() -> { 
+            get("/newgame", TicTacToeController.serveNewGame);  
+        });
+        
+		app.post("/startgame", ctx -> {
+			tttcontroller.startGame(ctx);
 		});
-
-		app.get("/", ctx -> {
-			ctx.redirect("/tictactoe.html");
-		});
-
-		/**
-		 * Please add your end points here.
-		 * 
-		 * 
-		 * 
-		 * 
-		 * Please add your end points here.
-		 * 
-		 * 
-		 * 
-		 * 
-		 * Please add your end points here.
-		 * 
-		 * 
-		 * 
-		 * 
-		 * Please add your end points here.
-		 * 
-		 */
 
 		// Web sockets - DO NOT DELETE or CHANGE
 		app.ws("/gameboard", new UiWebSocket());

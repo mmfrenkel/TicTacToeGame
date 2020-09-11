@@ -25,8 +25,8 @@ public class GameBoard {
 		this.p1 = null;
 		this.p2 = null;
 		this.gameStarted = false;
-		this.turn = 1; 								// p1 always goes first, even if we don't have p1 yet
-		this.boardState = new char[ROWS][COLUMNS];  // default value of char data type is '\u0000
+		this.turn = 1; // p1 always goes first, even if we don't have p1 yet
+		this.boardState = new char[COLUMNS][ROWS];
 		this.winner = 0;
 		this.isDraw = false;
 	}
@@ -58,25 +58,26 @@ public class GameBoard {
 	 */
 	public boolean isValidMove(Move move) {
 		int x = move.getMoveX();
-		int y = move.getMoveY();
+		int y = move.getMoveY(); 
 
-		if (x >= ROWS || y <= COLUMNS) {
+		if (x >= ROWS || y >= COLUMNS || x < 0 || y < 0) {
 			// user trying to play position out of range
+			System.out.println("Position (" + x + ", " + y + ") is out of range");
 			return false;
 		}
 
 		if (this.boardState[x][y] != 0) {
 			// this location on the board is already taken
+			System.out.println("Position (" + x + ", " + y + ") is already taken");
 			return false;
 		}
 		return true;
 	}
 
 	/**
-	 * Plays the Move submitted, adding it to the board and checking to see if it
-	 * was a winning move; if so, the board.
-	 * 
-	 * @param move Instance of Move object
+	 * Plays the Move submitted, adding it to the board and checking to
+	 * see if it was a winning move; if so, the board.
+	 * @param move  Instance of Move object
 	 */
 	public void playMove(Move move) {
 		int x = move.getMoveX();
@@ -85,7 +86,7 @@ public class GameBoard {
 
 		this.boardState[x][y] = type;
 
-		if (isWinningMove(type)) {
+		if (isWinningMove(x, y, type)) {
 			int playerId = move.getPlayer().getId();
 			this.setWinner(playerId);
 		}
@@ -95,58 +96,59 @@ public class GameBoard {
 	 * Determines whether or not the most recently submitted move resulted in a
 	 * winner configuration on the game board.
 	 * 
-	 * @param type Character, either 'X' or 'O'
-	 * @return If the last move was a winning move
+	 * @param type   Character, either 'X' or 'O'
+	 * @return If    the last move was a winning move
 	 */
-	public boolean isWinningMove(char type) {
-		return winningRow(type) || winningColumn(type) || winningHorizontal(type);
+	public boolean isWinningMove(int x, int y, char type) {
+		return winningRow(x, type) || winningColumn(y, type) || winningHorizontal(type);
 	}
 
-	private boolean winningRow(char type) {
-		// check if there is a winner in the column set
-		int r = 0, c = 0;
-
-		// check for winning rows first
-		while (r < ROWS) {
-			c = 0;  // go back to the first column
-			while (c < COLUMNS) {
-				if (this.boardState[r][c] != type) {
-					c = 0; // marker that test failed
-					break;
-				}
-				c++;
+	/**
+	 * Given a row index and a move type, determine if the 
+	 * move completes the row specified.
+	 * @param row    integer, index of a row
+	 * @param type   char, a move type; either 'X' or 'O'
+	 * @return       if it is a winning row
+	 */
+	private boolean winningRow(int row, char type) {
+		int column = 0;
+		
+		while (column < COLUMNS) {
+			if (this.boardState[row][column] != type) {
+				return false;
 			}
-			if (c != 0) { // we found a winning row!
-				return true;
-			}
-			r++; // otherwise check the next row
+			column++;
 		}
-		return false;
+		return true;
 	}
 
-	private boolean winningColumn(char type) {
-		// check if there is a winner in the column set
-		int r = 0, c = 0;
-
-		while (c < COLUMNS) {
-			r = 0;
-			while (r < ROWS) {
-				if (this.boardState[r][c] != type) {
-					r = 0; // marker that test failed
-					break;
-				}
-				r++;
+	/**
+	 * Given a column index and a move type, determine if the 
+	 * move completes the column specified.
+	 * @param column integer, index of a column
+	 * @param type   char, a move type; either 'X' or 'O'
+	 * @return       if it is a winning column
+	 */
+	private boolean winningColumn(int column, char type) {
+		int row = 0;
+		
+		while (row < ROWS) {
+			if (this.boardState[row][column] != type) {
+				return false;
 			}
-			if (r != 0) { // we found a winning column!
-				return true;
-			}
-			c++; // otherwise check the next column
+			row++;
 		}
-		return false;
+		return true;
 	}
 
-	private boolean winningHorizontal(char type) {
-		// check if there is a winner in the column set
+	/**
+	 * Given a row index and a move type, determine if the 
+	 * move completes the row specified.
+	 * @param row    integer, index of a row
+	 * @param type   char, a move type; either 'X' or 'O'
+	 * @return       if it is a winning row
+	 */
+	private boolean winningHorizontal(char type) { 
 		int r = 0, c = 0;
 
 		// check left diagonal i.e., \
@@ -159,8 +161,7 @@ public class GameBoard {
 			r++;
 		}
 
-		// did we find it on the left horizontal already?
-		if (r != 0) {
+		if (r != 0) {   // left horizontal works!
 			return true;
 		}
 
@@ -174,27 +175,25 @@ public class GameBoard {
 			c--;
 			r++;
 		}
-
-		// did we find it on the right horizontal?
-		if (r != 0) {
+		if (r != 0) { // right horizontal works!
 			return true;
 		}
 		return false;
 	}
 
-	public Player getP1() {
+	public Player getPlayer1() {
 		return p1;
 	}
 
-	public void setP1(Player p1) {
+	public void setPlayer1(Player p1) {
 		this.p1 = p1;
 	}
 
-	public Player getP2() {
+	public Player getPlayer2() {
 		return p2;
 	}
 
-	public void setP2(Player p2) {
+	public void setPlayer2(Player p2) {
 		this.p2 = p2;
 	}
 
@@ -238,4 +237,18 @@ public class GameBoard {
 		this.isDraw = isDraw;
 	}
 
+	public void printBoard() {
+		System.out.println("-----");
+		for (char[] arr: this.getBoardState()) {
+			for(char c: arr) {
+				if (c == 0) {
+					System.out.print("- ");
+				} else {
+					System.out.print(c + " ");
+				}
+			}
+			System.out.println();
+		}
+		System.out.println("-----");
+	}
 }
