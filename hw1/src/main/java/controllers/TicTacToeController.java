@@ -1,11 +1,10 @@
 package controllers;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.javalin.http.Context;
-import io.javalin.http.Handler;
-
 import models.GameBoard;
 import models.Player;
 
@@ -19,18 +18,18 @@ public class TicTacToeController {
 		this.gameBoard = new GameBoard();
 	}
 	
-	public static Handler serveNewGame = ctx -> {
+	public static Context serveNewGame(Context ctx) {
 		logger.info("Received request to serve main page.");
 		ctx.redirect("/tictactoe.html");
+		return ctx;
     };
     
     public Context startGame(Context ctx) {
     	Player player1 = new Player('X', 1);
-    	
-    	gameBoard.setPlayer1(player1);
-    	
-    	ctx.json(this.gameBoard); 
-    	
+    	gameBoard.setP1(player1);
+  
+    	JSONObject boardAsJson = gameBoard.asJson();
+    	ctx.result(boardAsJson.toString()).contentType("application/json");
     	return ctx;
     }
 

@@ -30,9 +30,13 @@ class PlayGame {
 			config.addStaticFiles("/public");
 			config.enableDevLogging();
 		}).start(PORT_NUMBER);
-
-        app.routes(() -> { 
-            get("/newgame", TicTacToeController.serveNewGame);  
+        
+        app.get("/", ctx -> {
+        	ctx.redirect("/newgame");
+        });
+        
+        app.get("/newgame", ctx -> {
+        	TicTacToeController.serveNewGame(ctx);
         });
         
 		app.post("/startgame", ctx -> {

@@ -1,5 +1,8 @@
 package models;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class GameBoard {
 
 	private Player p1;
@@ -26,7 +29,7 @@ public class GameBoard {
 		this.p2 = null;
 		this.gameStarted = false;
 		this.turn = 1; // p1 always goes first, even if we don't have p1 yet
-		this.boardState = new char[COLUMNS][ROWS];
+		this.boardState = new char[COLUMNS][ROWS]; 
 		this.winner = 0;
 		this.isDraw = false;
 	}
@@ -181,19 +184,19 @@ public class GameBoard {
 		return false;
 	}
 
-	public Player getPlayer1() {
+	public Player getP1() {
 		return p1;
 	}
 
-	public void setPlayer1(Player p1) {
+	public void setP1(Player p1) {
 		this.p1 = p1;
 	}
 
-	public Player getPlayer2() {
+	public Player getP2() {
 		return p2;
 	}
 
-	public void setPlayer2(Player p2) {
+	public void setP2(Player p2) {
 		this.p2 = p2;
 	}
 
@@ -250,5 +253,44 @@ public class GameBoard {
 			System.out.println();
 		}
 		System.out.println("-----");
+	}
+	
+	public JSONObject asJson() {
+		JSONObject boardAsJson = new JSONObject();
+		
+		if (p1 != null) {
+			JSONObject p1Json = new JSONObject();
+			p1Json.put("type", Character.toString(p1.getType()));
+			p1Json.put("id", p1.getId());
+			boardAsJson.put("p1", p1Json);
+		}
+		
+		if (p2 != null) {
+			JSONObject p2Json = new JSONObject();
+			p2Json.put("type", Character.toString(p1.getType()));
+			p2Json.put("id", p2.getId());
+			boardAsJson.put("p2", p2Json);
+		}
+		
+		JSONArray jsonBoardState = new JSONArray();
+		for (char[] row: boardState) {
+			JSONArray rowAsJson = new JSONArray();
+			
+			for (char pos: row) {
+				if (pos == 0) {
+					rowAsJson.put("\u0000");
+				} else {
+					rowAsJson.put(Character.toString(pos));
+				}
+			}
+			jsonBoardState.put(rowAsJson);
+		}
+		
+		boardAsJson.put("gameStarted", this.isGameStarted());
+		boardAsJson.put("turn", this.getTurn());
+		boardAsJson.put("boardState",jsonBoardState);
+		boardAsJson.put("winner", this.getWinner());
+		boardAsJson.put("isDraw", this.isDraw());
+		return boardAsJson;
 	}
 }
