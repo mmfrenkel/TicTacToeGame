@@ -27,4 +27,8 @@ public class Player {
 		this.id = id;
 	}
 
+	@Override
+	public String toString() {
+		return "Player [type=" + type + ", id=" + id + "]";
+	}
 }

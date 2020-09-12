@@ -1,5 +1,8 @@
 package models;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -22,6 +25,8 @@ public class GameBoard {
 	final private int COLUMNS = 3;
 
 	final private int ROWS = 3;
+	
+	final private List<Character> ACCEPTED_TYPES = Arrays.asList('X', 'O');
 
 	/* Primary Constructor for GameBoard() */
 	public GameBoard() {
@@ -238,6 +243,10 @@ public class GameBoard {
 
 	public void setDraw(boolean isDraw) {
 		this.isDraw = isDraw;
+	}
+	
+	public List<Character> acceptedTypes() {
+		return this.ACCEPTED_TYPES;
 	}
 
 	public void printBoard() {

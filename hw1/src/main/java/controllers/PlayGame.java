@@ -1,6 +1,8 @@
 package controllers;
 
 import io.javalin.Javalin;
+import models.GameBoard;
+
 import static io.javalin.apibuilder.ApiBuilder.get;
 import java.io.IOException;
 import java.util.Queue;
@@ -24,7 +26,8 @@ class PlayGame {
 	public static void main(final String[] args) {
 
 		logger.info("Starting application...");
-		TicTacToeController tttcontroller = new TicTacToeController();
+		GameBoard gameBoard = new GameBoard();
+		TicTacToeController tttcontroller = new TicTacToeController(gameBoard);
 		
 		app = Javalin.create(config -> {
 			config.addStaticFiles("/public");
@@ -42,6 +45,11 @@ class PlayGame {
 		app.post("/startgame", ctx -> {
 			tttcontroller.startGame(ctx);
 		});
+		
+		app.get("/joingame", ctx -> {
+			tttcontroller.addSecondPlayer(ctx);
+			sendGameBoardToAllPlayers(gameBoard.asJson().toString());
+		});
 
 		// Web sockets - DO NOT DELETE or CHANGE
 		app.ws("/gameboard", new UiWebSocket());
@@ -50,8 +58,8 @@ class PlayGame {
 	/**
 	 * Send message to all players.
 	 * 
-	 * @param gameBoardJson Gameboard JSON
-	 * @throws IOException Websocket message send IO Exception
+	 * @param gameBoardJson Game board JSON
+	 * @throws IOException Web socket message send IO Exception
 	 */
 	private static void sendGameBoardToAllPlayers(final String gameBoardJson) {
 		Queue<Session> sessions = UiWebSocket.getSessions();
@@ -59,7 +67,7 @@ class PlayGame {
 			try {
 				sessionPlayer.getRemote().sendString(gameBoardJson);
 			} catch (IOException e) {
-				// Add logger here
+				logger.error("Encountered exception sending game board to all players: ", e);
 			}
 		}
 	}
