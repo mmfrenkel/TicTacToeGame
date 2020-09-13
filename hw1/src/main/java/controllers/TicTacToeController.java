@@ -1,7 +1,5 @@
 package controllers;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +48,8 @@ public class TicTacToeController {
 		// Add player one to the game
 		assignPlayerOne(ctx);
 		logger.info("Added first player to the game. Player 1: " + gameBoard.getP1());
-
-		ctx.result(gameBoardToJSON().toString());
-		ctx.contentType("application/json");
+		
+		ctx.json(gameBoard);
 		ctx.status(200);
 		return ctx;
 	}
@@ -154,6 +151,7 @@ public class TicTacToeController {
 
 		}
 		ctx.json(message);
+		ctx.status(200);
 		return ctx;
 	}
 
@@ -232,57 +230,6 @@ public class TicTacToeController {
 
 		Move playerMove = new Move(currentPlayer, x, y);
 		return playerMove;
-	}
-
-	/**
-	 * Converts the game board into its JSON equivalent, with the format expected by
-	 * the requesting program. Note that Jackson and other tools that auto convert
-	 * classes to their JSON equivalents did not correctly convert empty game board
-	 * spaces to '\u0000` or name the fields correctly; hence a custom approach was
-	 * taken. Information about building a JSONObject was influenced by this
-	 * resource: https://www.baeldung.com/java-org-json.
-	 * 
-	 * @return JSONObject representing the current game board state
-	 */
-	public JSONObject gameBoardToJSON() {
-		JSONObject boardAsJson = new JSONObject();
-
-		// 1. add player information, if they exist
-		if (gameBoard.getP1() != null) {
-			JSONObject p1Json = new JSONObject();
-			p1Json.put("type", Character.toString(gameBoard.getP1().getType()));
-			p1Json.put("id", gameBoard.getP1().getId());
-			boardAsJson.put("p1", p1Json);
-		}
-		if (gameBoard.getP2() != null) {
-			JSONObject p2Json = new JSONObject();
-			p2Json.put("type", Character.toString(gameBoard.getP2().getType()));
-			p2Json.put("id", gameBoard.getP2().getId());
-			boardAsJson.put("p2", p2Json);
-		}
-
-		// 2. format game board state, setting null values to \u0000 encoding
-		JSONArray jsonBoardState = new JSONArray();
-		for (char[] row : gameBoard.getBoardState()) {
-			JSONArray rowAsJson = new JSONArray();
-
-			for (char pos : row) {
-				if (pos == 0) {
-					rowAsJson.put("\u0000");
-				} else {
-					rowAsJson.put(Character.toString(pos));
-				}
-			}
-			jsonBoardState.put(rowAsJson);
-		}
-
-		// 3. add all fields to the new json object, correctly named
-		boardAsJson.put("gameStarted", gameBoard.isGameStarted());
-		boardAsJson.put("turn", gameBoard.getTurn());
-		boardAsJson.put("boardState", jsonBoardState);
-		boardAsJson.put("winner", gameBoard.getWinner());
-		boardAsJson.put("isDraw", gameBoard.isDraw());
-		return boardAsJson;
 	}
 
 	public GameBoard getGameBoard() {

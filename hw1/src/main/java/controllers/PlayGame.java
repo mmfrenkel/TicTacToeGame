@@ -1,12 +1,16 @@
 package controllers;
 
 import io.javalin.Javalin;
+import io.javalin.plugin.json.JavalinJson;
 
 import java.io.IOException;
 import java.util.Queue;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 class PlayGame {
 
@@ -15,6 +19,8 @@ class PlayGame {
 	private static Javalin app;
 
 	private static Logger logger = LoggerFactory.getLogger(PlayGame.class);
+	
+	private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
 
 	/**
 	 * Main method of the application.
@@ -29,6 +35,10 @@ class PlayGame {
 		app = Javalin.create(config -> {
 			config.addStaticFiles("/public");
 			config.enableDevLogging();
+			
+			// configure controller to use Gson instead of Jackson for object->json mapping
+			JavalinJson.setToJsonMapper(gson::toJson);
+			JavalinJson.setFromJsonMapper(gson::fromJson);
 		}).start(PORT_NUMBER);
 
 		app.get("/", ctx -> {
@@ -45,12 +55,12 @@ class PlayGame {
 
 		app.get("/joingame", ctx -> {
 			tttcontroller.addSecondPlayer(ctx);
-			sendGameBoardToAllPlayers(tttcontroller.gameBoardToJSON().toString());
+			sendGameBoardToAllPlayers(gson.toJson(tttcontroller.getGameBoard()));
 		});
 
 		app.post("/move/:playerId", ctx -> {
 			tttcontroller.processPlayerMove(ctx);
-			sendGameBoardToAllPlayers(tttcontroller.gameBoardToJSON().toString());
+			sendGameBoardToAllPlayers(gson.toJson(tttcontroller.getGameBoard()));
 		});
 
 		// Web sockets - DO NOT DELETE or CHANGE

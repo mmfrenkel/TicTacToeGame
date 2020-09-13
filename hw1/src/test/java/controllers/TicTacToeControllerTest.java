@@ -3,10 +3,9 @@ package controllers;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import org.json.JSONObject;
 
 import static org.mockito.Mockito.verify;
 
@@ -14,11 +13,17 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
 
 class TicTacToeControllerTest {
 
 	private Context ctx = mock(Context.class);
+	
+	private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
+	
 	private TicTacToeController tttcontroller;
 
 	@BeforeEach
@@ -51,13 +56,15 @@ class TicTacToeControllerTest {
 	@DisplayName("Gameboard conversion to JSON failed to produce expected format.")
 	void convert_gameboard_to_json() {
 
-		JSONObject boardAsJson = tttcontroller.gameBoardToJSON();
+		JsonParser parser = new JsonParser();
+		
+		String boardAsJson = gson.toJson(tttcontroller.getGameBoard());
 
-		String expected = "{\"winner\":0,\"boardState\":" + "[[\"\\u0000\",\"\\u0000\",\"\\u0000\"],[\"\\u0000\","
-				+ "\"\\u0000\",\"\\u0000\"],[\"\\u0000\",\"\\u0000\",\"\\u0000\"]],"
-				+ "\"gameStarted\":false,\"turn\":1,\"isDraw\":false}";
+		String expectedBoardAsJson = "{\"gameStarted\":false,\"turn\":1,"
+				+ "\"boardState\":[[\"\\u0000\",\"\\u0000\",\"\\u0000\"],"
+				+ "[\"\\u0000\",\"\\u0000\",\"\\u0000\"],[\"\\u0000\",\"\\u0000\",\"\\u0000\"]],"
+				+ "\"winner\":0,\"isDraw\":false}";
 
-		JSONAssert.assertEquals(expected, boardAsJson, false);
+		assertEquals(parser.parse(expectedBoardAsJson), parser.parse(boardAsJson));
 	}
-
 }

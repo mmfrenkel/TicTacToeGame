@@ -3,22 +3,35 @@ package models;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.gson.annotations.Expose;
+
 public class GameBoard {
 
+	/* -- @Expose to tell gson to add only the below fields to json returned to user -- */
+	
+	@Expose
 	private Player p1;
 
+	@Expose
 	private Player p2;
 
+	@Expose
 	private boolean gameStarted;
 
+	@Expose
 	private int turn;
 
+	@Expose
 	private char[][] boardState;
 
+	@Expose
 	private int winner;
 
+	@Expose
 	private boolean isDraw;
 
+	/* -- end fields to serialize here -- */
+	
 	final private int COLUMNS = 3;
 
 	final private int ROWS = 3;
