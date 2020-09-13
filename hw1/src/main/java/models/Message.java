@@ -2,10 +2,16 @@ package models;
 
 public class Message {
 
-  private boolean moveValidity;
+	public Message(boolean moveValidity, MessageStatus code, String message) {
+		this.moveValidity = moveValidity;
+		this.code = code;
+		this.message = message;
+	}
 
-  private int code;
+	private boolean moveValidity;
 
-  private String message;
+	private MessageStatus code;
+
+	private String message;
 
 }

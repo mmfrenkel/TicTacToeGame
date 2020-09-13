@@ -50,6 +50,10 @@ class PlayGame {
 			tttcontroller.startGame();
 			sendGameBoardToAllPlayers(tttcontroller.convertGameBoardToJSON().toString());
 		});
+		
+		app.post("/move/:playerId", ctx -> {
+			tttcontroller.processPlayerMove(ctx);
+		});
 
 		// Web sockets - DO NOT DELETE or CHANGE
 		app.ws("/gameboard", new UiWebSocket());

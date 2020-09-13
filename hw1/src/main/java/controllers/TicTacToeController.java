@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import models.GameBoard;
+import models.Message;
+import models.MessageStatus;
+import models.Move;
 import models.Player;
 
 public class TicTacToeController {
@@ -60,9 +63,48 @@ public class TicTacToeController {
 		ctx.redirect("/tictactoe.html?p=2");
 		return ctx;
 	}
-	
+
 	public void startGame() {
 		gameBoard.setGameStarted(true);
+	}
+
+	public Context processPlayerMove(Context ctx) {
+
+		// parse information from context
+		Player currentPlayer = ctx.pathParam("playerId") == "1" ? gameBoard.getP1() : gameBoard.getP2();
+		String moveX = ctx.formParam("x");
+		String moveY = ctx.formParam("y");
+
+		// test cases where user is playing via API end points; these two issues are not
+		// possible when using the UI but should be considered
+		if (moveX == null || moveY == null) {
+			throw new BadRequestResponse("To make a game move, players must submit a board "
+					+ "row number (X) and column number (Y) (e.g., x=0&y=0");
+		}
+
+		int x, y;
+		try {
+			x = Integer.parseInt(moveX);
+			y = Integer.parseInt(moveX);
+		} catch (NumberFormatException nfe) {
+			// position played is not, in fact, represented by numbers
+			throw new BadRequestResponse("Players can only submit integer values to " + "indiciate a gave move.");
+		}
+
+		Move playerMove = new Move(currentPlayer, x, y);
+		Message message;
+		if (!gameBoard.isValidMove(playerMove)) {
+			message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED,
+					"Invalid move; choose unoccupied position within " + "coordinates 0,0 to 2,2");
+		} else {
+			// play move
+			gameBoard.playMove(playerMove);
+			message = new Message(true, MessageStatus.SUCCESS,
+					"Player " + currentPlayer.getId() + " made move at (" + moveX + ", " + moveY + ").");
+		}
+
+		ctx.json(message);
+		return ctx;
 	}
 
 	/**
@@ -83,7 +125,7 @@ public class TicTacToeController {
 			// one of the accepted types, raise custom exception; use default Javalin 400
 			// response
 			throw new BadRequestResponse(
-					"First player should select either " + "'X' or 'O'; cannot accept " + submittedType);
+					"First player should select either " + "'X' " + "or 'O'; cannot accept " + submittedType);
 		}
 
 		char playerType = submittedType.charAt(0);
@@ -108,7 +150,8 @@ public class TicTacToeController {
 	 * Converts the game board into its JSON equivalent, with the format expected by
 	 * the requesting program. Note that Jackson and other tools that auto convert
 	 * classes to their JSON equivalents did not correctly convert empty game board
-	 * spaces to '\u0000` or name the fields correctly; hence a custom approach was taken.
+	 * spaces to '\u0000` or name the fields correctly; hence a custom approach was
+	 * taken.
 	 * 
 	 * @return JSONObject representing the current game board state
 	 */
