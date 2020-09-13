@@ -3,7 +3,6 @@ package controllers;
 import io.javalin.Javalin;
 import models.GameBoard;
 
-import static io.javalin.apibuilder.ApiBuilder.get;
 import java.io.IOException;
 import java.util.Queue;
 import org.eclipse.jetty.websocket.api.Session;
@@ -28,27 +27,28 @@ class PlayGame {
 		logger.info("Starting application...");
 		GameBoard gameBoard = new GameBoard();
 		TicTacToeController tttcontroller = new TicTacToeController(gameBoard);
-		
+
 		app = Javalin.create(config -> {
 			config.addStaticFiles("/public");
 			config.enableDevLogging();
 		}).start(PORT_NUMBER);
-        
-        app.get("/", ctx -> {
-        	ctx.redirect("/newgame");
-        });
-        
-        app.get("/newgame", ctx -> {
-        	TicTacToeController.serveNewGame(ctx);
-        });
-        
+
+		app.get("/", ctx -> {
+			ctx.redirect("/newgame");
+		});
+
+		app.get("/newgame", ctx -> {
+			TicTacToeController.serveNewGame(ctx);
+		});
+
 		app.post("/startgame", ctx -> {
 			tttcontroller.startGame(ctx);
 		});
-		
+
 		app.get("/joingame", ctx -> {
 			tttcontroller.addSecondPlayer(ctx);
-			sendGameBoardToAllPlayers(gameBoard.asJson().toString());
+			tttcontroller.startGame();
+			sendGameBoardToAllPlayers(tttcontroller.convertGameBoardToJSON().toString());
 		});
 
 		// Web sockets - DO NOT DELETE or CHANGE

@@ -1,9 +1,11 @@
 package controllers;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import models.GameBoard;
 import models.Player;
@@ -26,16 +28,12 @@ public class TicTacToeController {
 
 	public Context startGame(Context ctx) {
 		// Add player one to the game
-		try {
-			assignPlayerOne(ctx);
-		} catch (InvalidGameParameter igp) {
-			// IGP exception thrown when user submits bad type
-			ctx.status(400).result(igp.getMessage());
-			return ctx;
-		}
+		assignPlayerOne(ctx);
 
-		JSONObject boardAsJson = gameBoard.asJson();
-		ctx.status(200).result(boardAsJson.toString()).contentType("application/json");
+		JSONObject boardAsJson = convertGameBoardToJSON();
+		ctx.result(boardAsJson.toString());
+		ctx.contentType("application/json");
+		ctx.status(200);
 		return ctx;
 	}
 
@@ -62,24 +60,29 @@ public class TicTacToeController {
 		ctx.redirect("/tictactoe.html?p=2");
 		return ctx;
 	}
+	
+	public void startGame() {
+		gameBoard.setGameStarted(true);
+	}
 
 	/**
 	 * Gets the 'type' that the first player selected then create the new player and
 	 * adds the player to the game board.
 	 * 
 	 * @param ctx Context object
-	 * @throws InvalidGameParameter if form parameter 'type' isn't one of expected
-	 *                              values
+	 * @throws BadRequestResponse if form parameter 'type' isn't one of expected
+	 *                            values; default Javalin 400 response
 	 */
-	private void assignPlayerOne(Context ctx) throws InvalidGameParameter {
+	private void assignPlayerOne(Context ctx) throws BadRequestResponse {
 
 		// options for the form parameter "type" are "X" or "O"
 		String submittedType = ctx.formParam("type");
 
 		if (submittedType == null || !gameBoard.acceptedTypes().contains(submittedType.charAt(0))) {
 			// the form parameter isn't what we expected; either it's missing or not
-			// one of the accepted types, raise custom exception
-			throw new InvalidGameParameter(
+			// one of the accepted types, raise custom exception; use default Javalin 400
+			// response
+			throw new BadRequestResponse(
 					"First player should select either " + "'X' or 'O'; cannot accept " + submittedType);
 		}
 
@@ -100,6 +103,53 @@ public class TicTacToeController {
 
 		gameBoard.setP1(p2);
 	}
-	
-	
+
+	/**
+	 * Converts the game board into its JSON equivalent, with the format expected by
+	 * the requesting program. Note that Jackson and other tools that auto convert
+	 * classes to their JSON equivalents did not correctly convert empty game board
+	 * spaces to '\u0000` or name the fields correctly; hence a custom approach was taken.
+	 * 
+	 * @return JSONObject representing the current game board state
+	 */
+	public JSONObject convertGameBoardToJSON() {
+		JSONObject boardAsJson = new JSONObject();
+
+		// 1. add player information, if they exist
+		if (gameBoard.getP1() != null) {
+			JSONObject p1Json = new JSONObject();
+			p1Json.put("type", Character.toString(gameBoard.getP1().getType()));
+			p1Json.put("id", gameBoard.getP1().getId());
+			boardAsJson.put("p1", p1Json);
+		}
+		if (gameBoard.getP2() != null) {
+			JSONObject p2Json = new JSONObject();
+			p2Json.put("type", Character.toString(gameBoard.getP2().getType()));
+			p2Json.put("id", gameBoard.getP2().getId());
+			boardAsJson.put("p2", p2Json);
+		}
+
+		// 2. format game board state, setting null values to \u0000 encoding
+		JSONArray jsonBoardState = new JSONArray();
+		for (char[] row : gameBoard.getBoardState()) {
+			JSONArray rowAsJson = new JSONArray();
+
+			for (char pos : row) {
+				if (pos == 0) {
+					rowAsJson.put("\u0000");
+				} else {
+					rowAsJson.put(Character.toString(pos));
+				}
+			}
+			jsonBoardState.put(rowAsJson);
+		}
+
+		// 3. add all fields to the new json object, correctly named
+		boardAsJson.put("gameStarted", gameBoard.isGameStarted());
+		boardAsJson.put("turn", gameBoard.getTurn());
+		boardAsJson.put("boardState", jsonBoardState);
+		boardAsJson.put("winner", gameBoard.getWinner());
+		boardAsJson.put("isDraw", gameBoard.isDraw());
+		return boardAsJson;
+	}
 }
