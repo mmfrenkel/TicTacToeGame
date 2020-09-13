@@ -17,6 +17,10 @@ public class Move {
 	public Player getPlayer() {
 		return player;
 	}
+	
+	public int getPlayerId() {
+		 return getPlayer().getId();
+	}
 
 	public void setPlayer(Player player) {
 		this.player = player;

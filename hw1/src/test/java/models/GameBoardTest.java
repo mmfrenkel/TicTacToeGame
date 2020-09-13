@@ -120,16 +120,36 @@ class GameBoardTest {
 		
 		assertEquals(true, testBoard.isWinningMove(0, 2, 'X'));
 	}
+	
+	@Test
+	@DisplayName("No moves have been played; the game board should be empty.")
+	void testBoardEmpty() {
+		
+		GameBoard testBoard = new GameBoard();
+		
+		assertEquals(true, testBoard.isEmpty());
+	}
+	
+	@Test
+	@DisplayName("Moves have been played; the game board should not be empty.")
+	void testBoardNotEmpty() {
+		
+		GameBoard testBoard = new GameBoard();
 
+		char[][] boardState = {{0, 'O', 0}, {0, 0, 0}, {0, 0, 0}};		
+		testBoard.setBoardState(boardState);
+		
+		assertEquals(false, testBoard.isEmpty());
+	}
+	
 	@Test
 	@DisplayName("Game board is partially filled so cannot be full.")
 	void testNotFullBoard() {
 		
 		GameBoard testBoard = new GameBoard();
 		
-		// test game board data; game hasn't started
+		// test game board data; game has started
 		char[][] boardState = {{0, 'X', 0}, {0, 0, 'O'}, {0, 0, 0}};
-		
 		testBoard.setBoardState(boardState);
 		
 		assertEquals(false, testBoard.isFull());
@@ -141,7 +161,7 @@ class GameBoardTest {
 		
 		GameBoard testBoard = new GameBoard();
 		
-		// test game board data; game hasn't started
+		// test game board data; cats game
 		char[][] boardState = {{'X', 'O', 'X'}, {'O', 'O', 'X'}, {'O', 'X', 'X'}};
 		
 		testBoard.setBoardState(boardState);

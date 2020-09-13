@@ -16,8 +16,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import models.GameBoard;
-
 class TicTacToeControllerTest {
 
 	private Context ctx = mock(Context.class);
@@ -25,7 +23,7 @@ class TicTacToeControllerTest {
 
 	@BeforeEach
 	void setController() {
-		tttcontroller = new TicTacToeController(new GameBoard());
+		tttcontroller = new TicTacToeController();
 	}
 
 	@Test()
@@ -53,13 +51,12 @@ class TicTacToeControllerTest {
 	@DisplayName("Gameboard conversion to JSON failed to produce expected format.")
 	void convert_gameboard_to_json() {
 
-		JSONObject boardAsJson = tttcontroller.convertGameBoardToJSON();
+		JSONObject boardAsJson = tttcontroller.gameBoardToJSON();
 
-		String expected = "{\"winner\":0,\"boardState\":"
-				+ "[[\"\\u0000\",\"\\u0000\",\"\\u0000\"],[\"\\u0000\","
+		String expected = "{\"winner\":0,\"boardState\":" + "[[\"\\u0000\",\"\\u0000\",\"\\u0000\"],[\"\\u0000\","
 				+ "\"\\u0000\",\"\\u0000\"],[\"\\u0000\",\"\\u0000\",\"\\u0000\"]],"
 				+ "\"gameStarted\":false,\"turn\":1,\"isDraw\":false}";
-		
+
 		JSONAssert.assertEquals(expected, boardAsJson, false);
 	}
 

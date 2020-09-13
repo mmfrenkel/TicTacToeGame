@@ -1,7 +1,6 @@
 package controllers;
 
 import io.javalin.Javalin;
-import models.GameBoard;
 
 import java.io.IOException;
 import java.util.Queue;
@@ -25,8 +24,7 @@ class PlayGame {
 	public static void main(final String[] args) {
 
 		logger.info("Starting application...");
-		GameBoard gameBoard = new GameBoard();
-		TicTacToeController tttcontroller = new TicTacToeController(gameBoard);
+		TicTacToeController tttcontroller = new TicTacToeController();
 
 		app = Javalin.create(config -> {
 			config.addStaticFiles("/public");
@@ -38,7 +36,7 @@ class PlayGame {
 		});
 
 		app.get("/newgame", ctx -> {
-			TicTacToeController.serveNewGame(ctx);
+			tttcontroller.serveNewGame(ctx);
 		});
 
 		app.post("/startgame", ctx -> {
@@ -47,12 +45,12 @@ class PlayGame {
 
 		app.get("/joingame", ctx -> {
 			tttcontroller.addSecondPlayer(ctx);
-			tttcontroller.startGame();
-			sendGameBoardToAllPlayers(tttcontroller.convertGameBoardToJSON().toString());
+			sendGameBoardToAllPlayers(tttcontroller.gameBoardToJSON().toString());
 		});
-		
+
 		app.post("/move/:playerId", ctx -> {
 			tttcontroller.processPlayerMove(ctx);
+			sendGameBoardToAllPlayers(tttcontroller.gameBoardToJSON().toString());
 		});
 
 		// Web sockets - DO NOT DELETE or CHANGE

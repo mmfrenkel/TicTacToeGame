@@ -19,22 +19,39 @@ public class TicTacToeController {
 
 	private static Logger logger = LoggerFactory.getLogger(PlayGame.class);
 
-	public TicTacToeController(GameBoard gameBoard) {
-		this.gameBoard = gameBoard;
+	public TicTacToeController() {
+		this.gameBoard = new GameBoard();
 	}
 
-	public static Context serveNewGame(Context ctx) {
-		logger.info("Received request to serve main page.");
+	/**
+	 * Redirects user to a new game board and resets the game board to a new,
+	 * cleared board without any players or moves.
+	 * 
+	 * @param ctx Context object for incoming request
+	 * @return Context object updated
+	 */
+	public Context serveNewGame(Context ctx) {
+		logger.info("Received request to start a new game!");
+
+		setGameBoard(new GameBoard()); // used to reset gameBoard when necessary
 		ctx.redirect("/tictactoe.html");
 		return ctx;
 	};
 
+	/**
+	 * Creates player one with their selected type (i.e., 'X' or 'O'). First player
+	 * to join game will always be player 1; however the game does not officially
+	 * start until player 2 joins.
+	 * 
+	 * @param ctx Context object for incoming request
+	 * @return Updated Context object
+	 */
 	public Context startGame(Context ctx) {
 		// Add player one to the game
 		assignPlayerOne(ctx);
+		logger.info("Added first player to the game. Player 1: " + gameBoard.getP1());
 
-		JSONObject boardAsJson = convertGameBoardToJSON();
-		ctx.result(boardAsJson.toString());
+		ctx.result(gameBoardToJSON().toString());
 		ctx.contentType("application/json");
 		ctx.status(200);
 		return ctx;
@@ -42,67 +59,100 @@ public class TicTacToeController {
 
 	/**
 	 * Adds second player to the game; if first player doesn't yet exist, then
-	 * redirects user to the new game end point.
+	 * redirects user to the new game end point so that they can enter as the first
+	 * player and select their player type.
 	 * 
-	 * @param ctx Context object
+	 * @param ctx Context object from incoming request
 	 * @return Updated Context object
 	 */
 	public Context addSecondPlayer(Context ctx) {
 
 		// if first player doesn't already exist, then
-		// redirect to the start game end point
+		// redirect to the start game end point so they can choose a
 		if (gameBoard.getP1() == null) {
-			logger.info("Player one doesn't exist yet.");
 			ctx.redirect("/newgame");
 			return ctx;
 		}
 
-		logger.info("Adding second player to the game. Player 1: " + gameBoard.getP1());
 		assignPlayerTwo();
+		setGameReady();
+		logger.info("Added second player to the game; game is ready. Player 2: " + gameBoard.getP2());
 
 		ctx.redirect("/tictactoe.html?p=2");
 		return ctx;
 	}
 
-	public void startGame() {
+	/**
+	 * Sets the game as 'started'; this happens only after both players one and two
+	 * are assigned.
+	 */
+	private void setGameReady() {
 		gameBoard.setGameStarted(true);
 	}
 
+	/**
+	 * Handles the move submitted by a user, checking several erroneous
+	 * circumstances, including lack of players, invalid ordering of operations,
+	 * another player's turn, occupied/invalid position and game already over. Moves
+	 * are played only if the move is determined to be valid under each of these
+	 * rules. Regardless, the outcome is reflected in the updated Context object.
+	 * 
+	 * @param ctx Context object from incoming request
+	 * @return Updated Context object
+	 */
 	public Context processPlayerMove(Context ctx) {
-
-		// parse information from context
-		Player currentPlayer = ctx.pathParam("playerId") == "1" ? gameBoard.getP1() : gameBoard.getP2();
-		String moveX = ctx.formParam("x");
-		String moveY = ctx.formParam("y");
-
-		// test cases where user is playing via API end points; these two issues are not
-		// possible when using the UI but should be considered
-		if (moveX == null || moveY == null) {
-			throw new BadRequestResponse("To make a game move, players must submit a board "
-					+ "row number (X) and column number (Y) (e.g., x=0&y=0");
-		}
-
-		int x, y;
-		try {
-			x = Integer.parseInt(moveX);
-			y = Integer.parseInt(moveX);
-		} catch (NumberFormatException nfe) {
-			// position played is not, in fact, represented by numbers
-			throw new BadRequestResponse("Players can only submit integer values to " + "indiciate a gave move.");
-		}
-
-		Move playerMove = new Move(currentPlayer, x, y);
+		Move move = parseMoveFromRequest(ctx);
 		Message message;
-		if (!gameBoard.isValidMove(playerMove)) {
-			message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED,
-					"Invalid move; choose unoccupied position within " + "coordinates 0,0 to 2,2");
-		} else {
-			// play move
-			gameBoard.playMove(playerMove);
-			message = new Message(true, MessageStatus.SUCCESS,
-					"Player " + currentPlayer.getId() + " made move at (" + moveX + ", " + moveY + ").");
-		}
 
+		/* ---- Need to check several states to make sure move is valid ---- */
+		// 1. If there aren't two players, game has not started and cannot make move
+		if (!gameBoard.isGameStarted()) {
+			message = new Message(false, MessageStatus.MISSING_PLAYER,
+					"Game cannot start until there are two players on the game board!");
+		}
+		// 2. First player should always be the one to make the first move
+		else if (gameBoard.isEmpty() && move.getPlayerId() == 2) {
+			message = new Message(false, MessageStatus.INVALID_ORDER_OF_PLAY,
+					"Player 1 makes the first move on an empty board!");
+		}
+		// 3. If it's not the player's turn, cannot make move
+		else if (move.getPlayerId() != gameBoard.getTurn()) {
+			message = new Message(false, MessageStatus.OTHER_PLAYERS_TURN,
+					"It is currently Player " + gameBoard.getTurn() + "'s turn!");
+		}
+		// 4. If the submitted move is not available, cannot make move
+		else if (!gameBoard.isValidMove(move)) {
+			message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED, "Invalid move (" + move.getMoveX() + ", "
+					+ move.getMoveY() + "); please choose unoccupied position within coordinates (0,0) to (2,2).");
+		}
+		// 5. If the board was already won, then cannot make another move
+		else if (gameBoard.getWinner() != 0) {
+			message = new Message(false, MessageStatus.GAME_ALREADY_OVER,
+					"Game is already over! Player " + gameBoard.getWinner() + " won!");
+		}
+		// 6. Move is valid and should be played
+		else {
+			gameBoard.playMove(move);
+
+			// 6a. If winning move, game over
+			if (gameBoard.getWinner() != 0) {
+				message = new Message(true, MessageStatus.GAME_OVER_WINNER,
+						"Player " + gameBoard.getWinner() + " is the winner!");
+			}
+			// 6b. If draw and no one can win
+			else if (gameBoard.isFull()) {
+				message = new Message(true, MessageStatus.GAME_OVER_NO_WINNER, "Game Over! Nobody wins.");
+			}
+			// 6c. No winners or draw yet
+			else {
+				message = new Message(true, MessageStatus.SUCCESS, "Player " + move.getPlayerId() + " made move at ("
+						+ move.getMoveX() + ", " + move.getMoveY() + ").");
+
+				// swap turns for players
+				gameBoard.setTurn(move.getPlayerId() == 1 ? 2 : 1);
+			}
+
+		}
 		ctx.json(message);
 		return ctx;
 	}
@@ -147,15 +197,54 @@ public class TicTacToeController {
 	}
 
 	/**
+	 * Extracts submitted information from context and returns a new Move() object
+	 * representing the requested move from the user. To protect against invalid
+	 * submissions by users accessing the game via an API interaction (instead of
+	 * UI), this method checks to be sure that both coordinates are submitted and
+	 * both are integer values.
+	 * 
+	 * @param ctx
+	 * @return new instance of Move object
+	 * @throws BadRequestResponse
+	 */
+	Move parseMoveFromRequest(Context ctx) {
+		// parse information from context
+		Player currentPlayer = ctx.pathParam("playerId") == "1" ? gameBoard.getP1() : gameBoard.getP2();
+		String moveX = ctx.formParam("x");
+		String moveY = ctx.formParam("y");
+
+		// test cases where user is playing via API end points; these two issues are not
+		// possible when using the UI but should be considered
+		if (moveX == null || moveY == null) {
+			throw new BadRequestResponse("To make a game move, players must submit a board "
+					+ "row number (X) and column number (Y) (e.g., x=0&y=0");
+		}
+
+		int x, y;
+		try {
+			x = Integer.parseInt(moveX);
+			y = Integer.parseInt(moveX);
+		} catch (NumberFormatException nfe) {
+			// position played is not, in fact, represented by numbers
+			throw new BadRequestResponse("Players can only submit integer values to indiciate " + "a gave move; got "
+					+ moveX + " and " + moveY);
+		}
+
+		Move playerMove = new Move(currentPlayer, x, y);
+		return playerMove;
+	}
+
+	/**
 	 * Converts the game board into its JSON equivalent, with the format expected by
 	 * the requesting program. Note that Jackson and other tools that auto convert
 	 * classes to their JSON equivalents did not correctly convert empty game board
 	 * spaces to '\u0000` or name the fields correctly; hence a custom approach was
-	 * taken.
+	 * taken. Information about building a JSONObject was influenced by this
+	 * resource: https://www.baeldung.com/java-org-json.
 	 * 
 	 * @return JSONObject representing the current game board state
 	 */
-	public JSONObject convertGameBoardToJSON() {
+	public JSONObject gameBoardToJSON() {
 		JSONObject boardAsJson = new JSONObject();
 
 		// 1. add player information, if they exist
@@ -194,5 +283,13 @@ public class TicTacToeController {
 		boardAsJson.put("winner", gameBoard.getWinner());
 		boardAsJson.put("isDraw", gameBoard.isDraw());
 		return boardAsJson;
+	}
+
+	public GameBoard getGameBoard() {
+		return gameBoard;
+	}
+
+	public void setGameBoard(GameBoard gameBoard) {
+		this.gameBoard = gameBoard;
 	}
 }

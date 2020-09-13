@@ -3,9 +3,6 @@ package models;
 import java.util.Arrays;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 public class GameBoard {
 
 	private Player p1;
@@ -40,10 +37,26 @@ public class GameBoard {
 	}
 
 	/**
+	 * Is the game board currently empty?
+	 * 
+	 * @return true if game board is empty (no moves made yet), else false
+	 */
+	public boolean isEmpty() {
+		for (int i = 0; i < ROWS; i++) {
+			for (int j = 0; j < COLUMNS; j++) {
+				if (this.boardState[i][j] != 0) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
 	 * Is the game board already full without a winner? Then its a draw game and no
 	 * one wins.
 	 * 
-	 * @return If the game board is full
+	 * @return true if the game board is full, else false
 	 */
 	public boolean isFull() {
 		for (int i = 0; i < ROWS; i++) {
@@ -84,7 +97,8 @@ public class GameBoard {
 
 	/**
 	 * Plays the Move submitted, adding it to the board and checking to see if it
-	 * was a winning move; if so, the board.
+	 * was a winning move; if so, update the board to reflect the change in board
+	 * state .
 	 * 
 	 * @param move Instance of Move object
 	 */
@@ -253,6 +267,10 @@ public class GameBoard {
 		return this.ACCEPTED_TYPES;
 	}
 
+	/**
+	 * Prints out the game board as a 3 x 3 square, visually similar to the board
+	 * shown in web UI.
+	 */
 	public void printBoard() {
 		System.out.println("-----");
 		for (char[] arr : this.getBoardState()) {
