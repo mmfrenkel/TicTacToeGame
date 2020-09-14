@@ -105,7 +105,7 @@ class GameBoardTest {
 	void testWinnerRow() {
 		
 		// test game board data; game hasn't started
-		char[][] boardState = {{'X', 0, 'O'}, {'X', '0', 0}, {'X', 0, 0}};
+		char[][] boardState = {{'X', 0, 'O'}, {'X', 0, 0}, {'X', 0, 0}};
 		
 		emptyTestBoard.setBoardState(boardState);
 		
@@ -180,7 +180,7 @@ class GameBoardTest {
 	
 		Message msg = emptyTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.MISSING_PLAYER, msg.getCode());
+		assertEquals(MessageStatus.MISSING_PLAYER.getValue(), msg.getCode());
 	}
 	
 	@Test()
@@ -195,7 +195,7 @@ class GameBoardTest {
 		Move move = new Move(player1, 0, 0);
 		Message msg = emptyTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.MISSING_PLAYER, msg.getCode());
+		assertEquals(MessageStatus.MISSING_PLAYER.getValue(), msg.getCode());
 	}
 
 	@Test()
@@ -206,7 +206,7 @@ class GameBoardTest {
 		Move move = new Move(player2, 0, 0);
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.INVALID_ORDER_OF_PLAY, msg.getCode());
+		assertEquals(MessageStatus.INVALID_ORDER_OF_PLAY.getValue(), msg.getCode());
 	}
 
 	
@@ -222,7 +222,7 @@ class GameBoardTest {
 		Move move = new Move(player1, 0, 0);
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.OTHER_PLAYERS_TURN, msg.getCode());
+		assertEquals(MessageStatus.OTHER_PLAYERS_TURN.getValue(), msg.getCode());
 	}
 	
 	
@@ -238,7 +238,7 @@ class GameBoardTest {
 		Move move = new Move(player2, 0, 1);  // this position is already occupied
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.POSITION_NOT_ALLOWED, msg.getCode());
+		assertEquals(MessageStatus.POSITION_NOT_ALLOWED.getValue(), msg.getCode());
 	}
 
 	@Test()
@@ -253,7 +253,7 @@ class GameBoardTest {
 		Move move = new Move(player2, 4, 5);  // this position doesn't exist
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.POSITION_NOT_ALLOWED, msg.getCode());
+		assertEquals(MessageStatus.POSITION_NOT_ALLOWED.getValue(), msg.getCode());
 	}
 	
 	@Test()
@@ -268,7 +268,7 @@ class GameBoardTest {
 		Move move = new Move(player1, 0, 2); 
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.GAME_ALREADY_OVER, msg.getCode());
+		assertEquals(MessageStatus.GAME_ALREADY_OVER.getValue(), msg.getCode());
 	}
 	
 	@Test()
@@ -282,7 +282,7 @@ class GameBoardTest {
 		Move move = new Move(player1, 2, 1);
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.GAME_OVER_WINNER, msg.getCode());
+		assertEquals(MessageStatus.GAME_OVER_WINNER.getValue(), msg.getCode());
 	}
 	
 	@Test()
@@ -297,7 +297,7 @@ class GameBoardTest {
 		Move move = new Move(player2, 2, 1);  // this position is already occupied
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.GAME_OVER_NO_WINNER, msg.getCode());
+		assertEquals(MessageStatus.GAME_OVER_NO_WINNER.getValue(), msg.getCode());
 	}
 	
 	
@@ -311,7 +311,7 @@ class GameBoardTest {
 		Move move = new Move(player1, 0, 2); 
 		Message msg = activeTestBoard.processPlayerMove(move);
 		
-		assertEquals(MessageStatus.SUCCESS, msg.getCode());
+		assertEquals(MessageStatus.SUCCESS.getValue(), msg.getCode());
 		assertEquals(activeTestBoard.getTurn(), 2);
 	}
 }
