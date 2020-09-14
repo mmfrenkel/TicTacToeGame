@@ -31,14 +31,14 @@ class PlayGame {
 
 		logger.info("Starting application...");
 		TicTacToeController tttcontroller = new TicTacToeController();
+		
+		// configure controller to use Gson instead of Jackson for object->json mapping
+		JavalinJson.setToJsonMapper(gson::toJson);
+		JavalinJson.setFromJsonMapper(gson::fromJson);
 
 		app = Javalin.create(config -> {
 			config.addStaticFiles("/public");
 			config.enableDevLogging();
-			
-			// configure controller to use Gson instead of Jackson for object->json mapping
-			JavalinJson.setToJsonMapper(gson::toJson);
-			JavalinJson.setFromJsonMapper(gson::fromJson);
 		}).start(PORT_NUMBER);
 
 		app.get("/", ctx -> {

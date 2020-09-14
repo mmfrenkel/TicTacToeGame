@@ -42,4 +42,9 @@ public class Move {
 		this.moveY = moveY;
 	}
 
+	@Override
+	public String toString() {
+		return "Move [player=" + player + ", moveX=" + moveX + ", moveY=" + moveY + "]";
+	}
+
 }

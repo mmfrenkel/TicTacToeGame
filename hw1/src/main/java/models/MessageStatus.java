@@ -1,7 +1,7 @@
 package models;
 
 /*
- * Example for enum implementation details from B. Gurung at 
+ * Example for enumerated options implementation details from B. Gurung at 
  * https://stackoverflow.com/questions/8811815/is-it-possible-to-assign-numeric-value-to-an-enum-in-java
  */
 public enum MessageStatus {

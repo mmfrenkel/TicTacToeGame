@@ -8,13 +8,16 @@ import org.junit.jupiter.api.Test;
 
 class GameBoardTest {
 	
-	private GameBoard testBoard;
-	private Player player1;
+	private GameBoard emptyTestBoard;
+	private GameBoard activeTestBoard;
+	private char[][] emptyBoard = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+	private Player player1 = new Player('X', 1); 
+	private Player player2 = new Player('O', 2);
 	
 	@BeforeEach
 	void setGameboard() {
-		this.testBoard = new GameBoard();
-		this.player1 = new Player('X', 1); 
+		this.emptyTestBoard = new GameBoard();
+		this.activeTestBoard = new GameBoard(player1, player2, true, 1, emptyBoard, 0, false);
 	}
 	
 	@Test
@@ -22,10 +25,10 @@ class GameBoardTest {
 	void testIsValidMoveFalse() {
 		
 		char[][] boardState = {{0, 0, 'O'}, {0, 0, 'X'}, {0, 0, 0}};
-		testBoard.setBoardState(boardState); 
+		emptyTestBoard.setBoardState(boardState); 
 		
 		Move attemptedMove = new Move(player1, 0, 2);
-		assertEquals(false, testBoard.isValidMove(attemptedMove));
+		assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
 	}
 	
 	@Test
@@ -33,10 +36,10 @@ class GameBoardTest {
 	void testIsValidMoveTrue() {
 		
 		char[][] boardState = {{0, 0, 'O'}, {0, 0, 'X'}, {0, 0, 0}};
-		testBoard.setBoardState(boardState); 
+		emptyTestBoard.setBoardState(boardState); 
 
 		Move attemptedMove = new Move(player1, 0, 1);
-		assertEquals(true, testBoard.isValidMove(attemptedMove));
+		assertEquals(true, emptyTestBoard.isValidMove(attemptedMove));
 	}
 	
 	@Test
@@ -44,13 +47,13 @@ class GameBoardTest {
 	void testPlayMove() {
 		
 		char[][] startingBoardState = {{0, 0, 'O'}, {0, 0, 'X'}, {0, 0, 0}};
-		testBoard.setBoardState(startingBoardState); 
+		emptyTestBoard.setBoardState(startingBoardState); 
 
 		Move move = new Move(player1, 0, 1);
-		testBoard.playMove(move);
+		emptyTestBoard.playMove(move);
 		char[][] expectedBoardState = {{0, 'X', 'O'}, {0, 0, 'X'}, {0, 0, 0}};
 		
-		assertArrayEquals(expectedBoardState, testBoard.getBoardState());
+		assertArrayEquals(expectedBoardState, emptyTestBoard.getBoardState());
 	}
 
 	@Test
@@ -58,9 +61,9 @@ class GameBoardTest {
 	void testNotWinneEmptyBoard() {
 		char[][] boardState = {{0, 0, 0}, {0, 0, 'X'}, {0, 0, 0}};
 		
-		testBoard.setBoardState(boardState);
+		emptyTestBoard.setBoardState(boardState);
 
-		assertEquals(false, testBoard.isWinningMove(1, 2, 'X'));
+		assertEquals(false, emptyTestBoard.isWinningMove(1, 2, 'X'));
 	}
 	
 	@Test
@@ -68,9 +71,9 @@ class GameBoardTest {
 	void testNotWinner() {
 		char[][] boardState = {{0, 'X', 0}, {0, 'O', 0}, {'X', 0, 0}};
 		
-		testBoard.setBoardState(boardState);
+		emptyTestBoard.setBoardState(boardState);
 		
-		assertEquals(false, testBoard.isWinningMove(2, 0, 'X'));
+		assertEquals(false, emptyTestBoard.isWinningMove(2, 0, 'X'));
 	}
 	
 	@Test
@@ -80,9 +83,9 @@ class GameBoardTest {
 		// test game board data; game hasn't started
 		char[][] boardState = {{'X', 0, 'O'}, {'O', 'X', 0}, {0, 0, 'X'}};
 		
-		testBoard.setBoardState(boardState);
+		emptyTestBoard.setBoardState(boardState);
 		
-		assertEquals(true, testBoard.isWinningMove(2, 2, 'X'));
+		assertEquals(true, emptyTestBoard.isWinningMove(2, 2, 'X'));
 	}
 	
 	@Test
@@ -92,9 +95,9 @@ class GameBoardTest {
 		// test game board data; game hasn't started
 		char[][] boardState = {{0, 0, 'O'}, {'X', 'O', 0}, {'O', 0, 'X'}};
 		
-		testBoard.setBoardState(boardState);
+		emptyTestBoard.setBoardState(boardState);
 
-		assertEquals(true, testBoard.isWinningMove(1, 1, 'O'));
+		assertEquals(true, emptyTestBoard.isWinningMove(1, 1, 'O'));
 	}
 	
 	@Test
@@ -104,9 +107,9 @@ class GameBoardTest {
 		// test game board data; game hasn't started
 		char[][] boardState = {{'X', 0, 'O'}, {'X', '0', 0}, {'X', 0, 0}};
 		
-		testBoard.setBoardState(boardState);
+		emptyTestBoard.setBoardState(boardState);
 		
-		assertEquals(true, testBoard.isWinningMove(2, 0, 'X'));
+		assertEquals(true, emptyTestBoard.isWinningMove(2, 0, 'X'));
 	}
 	
 	@Test
@@ -116,9 +119,9 @@ class GameBoardTest {
 		// test game board data; game hasn't started
 		char[][] boardState = {{'X', 'X', 'X'}, {'O', 'O', 0}, {0, 0, 'O'}};
 		
-		testBoard.setBoardState(boardState);
+		emptyTestBoard.setBoardState(boardState);
 		
-		assertEquals(true, testBoard.isWinningMove(0, 2, 'X'));
+		assertEquals(true, emptyTestBoard.isWinningMove(0, 2, 'X'));
 	}
 	
 	@Test
@@ -167,5 +170,148 @@ class GameBoardTest {
 		testBoard.setBoardState(boardState);
 		
 		assertEquals(true, testBoard.isFull());
+	}
+	
+	@Test()
+	@DisplayName("Gameboard has no players, game has not started and player should not be able to make move.")
+	void preventPlayingMoveIfMissingPlayers() {
+
+		Move move = new Move(null, 0, 0);
+	
+		Message msg = emptyTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.MISSING_PLAYER, msg.getCode());
+	}
+	
+	@Test()
+	@DisplayName("Gameboard has only 1 player, game has not started and player should not be able to make move.")
+	void preventPlayingMoveIfMissingPlayer() {
+
+		// configure game board for test
+		char [][] boardState = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+		emptyTestBoard.setP1(player1);
+		emptyTestBoard.setBoardState(boardState);
+		
+		Move move = new Move(player1, 0, 0);
+		Message msg = emptyTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.MISSING_PLAYER, msg.getCode());
+	}
+
+	@Test()
+	@DisplayName("First player should always be the one to make the first move.")
+	void testPlayerOneAlwaysPlaysFirst() {
+		
+		// configure game board for test
+		Move move = new Move(player2, 0, 0);
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.INVALID_ORDER_OF_PLAY, msg.getCode());
+	}
+
+	
+	@Test()
+	@DisplayName("Player should not be able to make a move if it is not their turn.")
+	void playerCannotMakeMoveIfNotTheirTurn() {
+		
+		// configure game board for test
+		char [][] boardState = {{0, 'X', 0}, {0, 'O', 0}, {'X', 0, 0}};
+		activeTestBoard.setBoardState(boardState);
+		activeTestBoard.setTurn(2);
+		
+		Move move = new Move(player1, 0, 0);
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.OTHER_PLAYERS_TURN, msg.getCode());
+	}
+	
+	
+	@Test()
+	@DisplayName("Player should not be able to make a move the position requested is already occupied.")
+	void playerCannotMakeMoveToOccupiedPosition() {
+		
+		// configure game board for test
+		char [][] boardState = {{0, 'X', 0}, {0, 'O', 0}, {'X', 0, 0}};
+		activeTestBoard.setBoardState(boardState);
+		activeTestBoard.setTurn(2);
+		
+		Move move = new Move(player2, 0, 1);  // this position is already occupied
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.POSITION_NOT_ALLOWED, msg.getCode());
+	}
+
+	@Test()
+	@DisplayName("Player should not be able to make a move the position on the board that doesn't exist.")
+	void playerCannotMakeMoveToNonexistentPosition() {
+		
+		// configure game board for test
+		char [][] boardState = {{0, 'X', 0}, {0, 'O', 0}, {'X', 0, 0}};
+		activeTestBoard.setBoardState(boardState);
+		activeTestBoard.setTurn(2);
+		
+		Move move = new Move(player2, 4, 5);  // this position doesn't exist
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.POSITION_NOT_ALLOWED, msg.getCode());
+	}
+	
+	@Test()
+	@DisplayName("Player should not be able to continue playing if other player already won.")
+	void playerCannotMakeMoveIfGameOver() {
+		
+		// configure game board for test
+		char [][] boardState = {{'O', 'X', 0}, {'O', 'X', 0}, {'O', 0, 'X'}};
+		activeTestBoard.setBoardState(boardState);
+		activeTestBoard.setWinner(1);
+		
+		Move move = new Move(player1, 0, 2); 
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.GAME_ALREADY_OVER, msg.getCode());
+	}
+	
+	@Test()
+	@DisplayName("Player made winning move; game should report that they have won.")
+	void playerMakesWinningMove() {
+		
+		// configure game board for test
+		char [][] boardState = {{0, 'X', 0}, {'O', 'X', 0}, {'O', 0, 0}};
+		activeTestBoard.setBoardState(boardState);
+		
+		Move move = new Move(player1, 2, 1);
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.GAME_OVER_WINNER, msg.getCode());
+	}
+	
+	@Test()
+	@DisplayName("Player made the last available move on the board, but no one won.")
+	void playerMakesMoveForDraw() {
+		
+		// configure game board for test
+		char [][] boardState = {{'O', 'X', 'O'}, {'X', 'O', 'X'}, {'X', 0, 'X'}};
+		activeTestBoard.setBoardState(boardState);
+		activeTestBoard.setTurn(2);
+		
+		Move move = new Move(player2, 2, 1);  // this position is already occupied
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.GAME_OVER_NO_WINNER, msg.getCode());
+	}
+	
+	
+	@Test()
+	@DisplayName("Player made move; no one has won and no draw yet.")
+	void turnSwitchesToOtherPlayerIfNoWinner() {
+		// configure game board for test
+		char [][] boardState = {{0, 'X', 0}, {0, 'O', 0}, {0, 0, 0}};
+		activeTestBoard.setBoardState(boardState);
+		
+		Move move = new Move(player1, 0, 2); 
+		Message msg = activeTestBoard.processPlayerMove(move);
+		
+		assertEquals(MessageStatus.SUCCESS, msg.getCode());
+		assertEquals(activeTestBoard.getTurn(), 2);
 	}
 }

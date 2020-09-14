@@ -7,8 +7,11 @@ import com.google.gson.annotations.Expose;
 
 public class GameBoard {
 
-	/* -- @Expose to tell gson to add only the below fields to json returned to user -- */
-	
+	/*
+	 * -- @Expose to tell gson to add only the below fields to json returned to user
+	 * --
+	 */
+
 	@Expose
 	private Player p1;
 
@@ -31,7 +34,7 @@ public class GameBoard {
 	private boolean isDraw;
 
 	/* -- end fields to serialize here -- */
-	
+
 	final private int COLUMNS = 3;
 
 	final private int ROWS = 3;
@@ -47,6 +50,18 @@ public class GameBoard {
 		this.boardState = new char[COLUMNS][ROWS];
 		this.winner = 0;
 		this.isDraw = false;
+	}
+
+	/* Secondary Constructor helpful for easy testing */
+	public GameBoard(Player p1, Player p2, boolean gameStarted, int turn, 
+			char[][] state, int winner, boolean isDraw) {
+		this.p1 = p1;
+		this.p2 = p2;
+		this.gameStarted = gameStarted;
+		this.turn = turn;
+		this.boardState = state;
+		this.winner = winner;
+		this.isDraw = isDraw;
 	}
 
 	/**
@@ -84,6 +99,72 @@ public class GameBoard {
 	}
 
 	/**
+	 * Handles the move submitted by a user, checking several erroneous
+	 * circumstances, including lack of players, invalid ordering of operations,
+	 * another player's turn, occupied/invalid position and game already over. Moves
+	 * are played only if the move is determined to be valid under each of these
+	 * rules. The result of the move is returned as a Move object
+	 * 
+	 * @param move instance of player Move
+	 * @return Message() object, reflecting outcome of Move
+	 */
+	public Message processPlayerMove(Move move) {
+		Message message;
+
+		/* ---- Need to check several states to make sure move is valid ---- */
+		// 1. If there aren't two players, game has not started and cannot make move
+		if (!isGameStarted()) {
+			message = new Message(false, MessageStatus.MISSING_PLAYER,
+					"Game cannot start until there are two players on the game board!");
+		}
+		// 2. First player should always be the one to make the first move
+		else if (isEmpty() && move.getPlayerId() == 2) {
+			message = new Message(false, MessageStatus.INVALID_ORDER_OF_PLAY,
+					"Player 1 makes the first move on an empty board!");
+		}
+		// 3. If it's not the player's turn, cannot make move
+		else if (move.getPlayerId() != getTurn()) {
+			message = new Message(false, MessageStatus.OTHER_PLAYERS_TURN,
+					"It is currently Player " + getTurn() + "'s turn!");
+		}
+		// 4. If the submitted move is not available, cannot make move
+		else if (!isValidMove(move)) {
+			message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED,
+					"Cannot move " + move.getPlayer().getType() + "(" + move.getMoveX() + ", " + move.getMoveY()
+							+ "); please choose unoccupied position within coordinates (0,0) to (2,2).");
+		}
+		// 5. If the board was already won, then cannot make another move
+		else if (getWinner() != 0) {
+			message = new Message(false, MessageStatus.GAME_ALREADY_OVER,
+					"Game is already over! Player " + getWinner() + " won!");
+		}
+		// 6. Move is valid and should be played
+		else {
+			playMove(move);
+
+			// 6a. If winning move, game over
+			if (getWinner() != 0) {
+				message = new Message(true, MessageStatus.GAME_OVER_WINNER,
+						"Player " + getWinner() + " is the winner!");
+			}
+			// 6b. If draw and no one can win
+			else if (isFull()) {
+				message = new Message(true, MessageStatus.GAME_OVER_NO_WINNER, "Game Over! Nobody wins.");
+			}
+			// 6c. No winners or draw yet
+			else {
+				message = new Message(true, MessageStatus.SUCCESS, "Player " + move.getPlayerId() + " made move at ("
+						+ move.getMoveX() + ", " + move.getMoveY() + ").");
+
+				// swap turns for players
+				setTurn(move.getPlayerId() == 1 ? 2 : 1);
+			}
+
+		}
+		return message;
+	}
+
+	/**
 	 * Is the move provided a valid move (i.e., to a position that is currently
 	 * unoccupied?
 	 * 
@@ -96,13 +177,11 @@ public class GameBoard {
 
 		if (x >= ROWS || y >= COLUMNS || x < 0 || y < 0) {
 			// user trying to play position out of range
-			System.out.println("Position (" + x + ", " + y + ") is out of range");
 			return false;
 		}
 
 		if (this.boardState[x][y] != 0) {
 			// this location on the board is already taken
-			System.out.println("Position (" + x + ", " + y + ") is already taken");
 			return false;
 		}
 		return true;
@@ -232,7 +311,31 @@ public class GameBoard {
 		return p2;
 	}
 
-	public void setP2(Player p2) {
+	/**
+	 * Method to auto-set player 2 as the player type that player 1 is not.
+	 */
+	public void autoSetP2() {
+		char playerType = getP1().getType() == 'X' ? 'O' : 'X';
+		Player p2 = new Player(playerType, 2);
+		this.p2 = p2;
+	}
+
+	/**
+	 * Set player 2 manually, with the risk of accidentally trying to assign a
+	 * player whose type has already been taken (i.e., when Player 1 has already
+	 * chosen 'X' as it's type you cannot set Player 2 to also have 'X').
+	 * 
+	 * @param p2 Instance of Player object, representing the second player to join
+	 *           game
+	 * @throws InvalidGameBoardConfigurationException
+	 */
+	public void setP2(Player p2) throws InvalidGameBoardConfigurationException {
+
+		// catch scenarios where player 2 wants to be 'X' but player 1 already is
+		if (p2.getType() == getP1().getType()) {
+			throw new InvalidGameBoardConfigurationException(
+					"Player 1 already has selected '" + p2.getType() + "'. Cannot have two players with the same type");
+		}
 		this.p2 = p2;
 	}
 

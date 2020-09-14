@@ -7,7 +7,6 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import models.GameBoard;
 import models.Message;
-import models.MessageStatus;
 import models.Move;
 import models.Player;
 
@@ -45,10 +44,12 @@ public class TicTacToeController {
 	 * @return Updated Context object
 	 */
 	public Context startGame(Context ctx) {
-		// Add player one to the game
-		assignPlayerOne(ctx);
-		logger.info("Added first player to the game. Player 1: " + gameBoard.getP1());
 		
+		// Parse player 1 information then add player one to the game
+		Player player1 = parsePlayerOneFromRequest(ctx);
+		gameBoard.setP1(player1);
+		logger.info("Added first player to the game. Player 1: " + player1);
+
 		ctx.json(gameBoard);
 		ctx.status(200);
 		return ctx;
@@ -71,87 +72,29 @@ public class TicTacToeController {
 			return ctx;
 		}
 
-		assignPlayerTwo();
-		setGameReady();
-		logger.info("Added second player to the game; game is ready. Player 2: " + gameBoard.getP2());
+		gameBoard.autoSetP2();
+		gameBoard.setGameStarted(true);
+		logger.info("Added second player to the game; game board is now ready. Player 2: " + gameBoard.getP2());
 
 		ctx.redirect("/tictactoe.html?p=2");
 		return ctx;
 	}
 
 	/**
-	 * Sets the game as 'started'; this happens only after both players one and two
-	 * are assigned.
-	 */
-	private void setGameReady() {
-		gameBoard.setGameStarted(true);
-	}
-
-	/**
-	 * Handles the move submitted by a user, checking several erroneous
-	 * circumstances, including lack of players, invalid ordering of operations,
-	 * another player's turn, occupied/invalid position and game already over. Moves
-	 * are played only if the move is determined to be valid under each of these
-	 * rules. Regardless, the outcome is reflected in the updated Context object.
+	 * Handles the move submitted by a user, parsing move from request and sending
+	 * move to the game board.
 	 * 
 	 * @param ctx Context object from incoming request
 	 * @return Updated Context object
 	 */
 	public Context processPlayerMove(Context ctx) {
+
 		Move move = parseMoveFromRequest(ctx);
-		Message message;
+		logger.info("Handling move submitted by user: " + move);
 
-		/* ---- Need to check several states to make sure move is valid ---- */
-		// 1. If there aren't two players, game has not started and cannot make move
-		if (!gameBoard.isGameStarted()) {
-			message = new Message(false, MessageStatus.MISSING_PLAYER,
-					"Game cannot start until there are two players on the game board!");
-		}
-		// 2. First player should always be the one to make the first move
-		else if (gameBoard.isEmpty() && move.getPlayerId() == 2) {
-			message = new Message(false, MessageStatus.INVALID_ORDER_OF_PLAY,
-					"Player 1 makes the first move on an empty board!");
-		}
-		// 3. If it's not the player's turn, cannot make move
-		else if (move.getPlayerId() != gameBoard.getTurn()) {
-			message = new Message(false, MessageStatus.OTHER_PLAYERS_TURN,
-					"It is currently Player " + gameBoard.getTurn() + "'s turn!");
-		}
-		// 4. If the submitted move is not available, cannot make move
-		else if (!gameBoard.isValidMove(move)) {
-			message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED, "Invalid move (" + move.getMoveX() + ", "
-					+ move.getMoveY() + "); please choose unoccupied position within coordinates (0,0) to (2,2).");
-		}
-		// 5. If the board was already won, then cannot make another move
-		else if (gameBoard.getWinner() != 0) {
-			message = new Message(false, MessageStatus.GAME_ALREADY_OVER,
-					"Game is already over! Player " + gameBoard.getWinner() + " won!");
-		}
-		// 6. Move is valid and should be played
-		else {
-			gameBoard.playMove(move);
+		Message message = gameBoard.processPlayerMove(move);
 
-			// 6a. If winning move, game over
-			if (gameBoard.getWinner() != 0) {
-				message = new Message(true, MessageStatus.GAME_OVER_WINNER,
-						"Player " + gameBoard.getWinner() + " is the winner!");
-			}
-			// 6b. If draw and no one can win
-			else if (gameBoard.isFull()) {
-				message = new Message(true, MessageStatus.GAME_OVER_NO_WINNER, "Game Over! Nobody wins.");
-			}
-			// 6c. No winners or draw yet
-			else {
-				message = new Message(true, MessageStatus.SUCCESS, "Player " + move.getPlayerId() + " made move at ("
-						+ move.getMoveX() + ", " + move.getMoveY() + ").");
-
-				// swap turns for players
-				gameBoard.setTurn(move.getPlayerId() == 1 ? 2 : 1);
-			}
-
-		}
 		ctx.json(message);
-		ctx.status(200);
 		return ctx;
 	}
 
@@ -160,10 +103,11 @@ public class TicTacToeController {
 	 * adds the player to the game board.
 	 * 
 	 * @param ctx Context object
+	 * @return new Player parsed from Context object
 	 * @throws BadRequestResponse if form parameter 'type' isn't one of expected
 	 *                            values; default Javalin 400 response
 	 */
-	private void assignPlayerOne(Context ctx) throws BadRequestResponse {
+	private Player parsePlayerOneFromRequest(Context ctx) throws BadRequestResponse {
 
 		// options for the form parameter "type" are "X" or "O"
 		String submittedType = ctx.formParam("type");
@@ -178,20 +122,7 @@ public class TicTacToeController {
 
 		char playerType = submittedType.charAt(0);
 
-		Player p1 = new Player(playerType, 1);
-		gameBoard.setP1(p1);
-	}
-
-	/**
-	 * Creates second player, assigning it's type based on whichever move type isn't
-	 * taken ('X' or 'O') and adds player to the game board.
-	 */
-	private void assignPlayerTwo() {
-		// assign second player to the type that wasn't already selected
-		char playerType = gameBoard.getP1().getType() == 'X' ? 'O' : 'X';
-		Player p2 = new Player(playerType, 2);
-
-		gameBoard.setP1(p2);
+		return new Player(playerType, 1);
 	}
 
 	/**
@@ -203,19 +134,26 @@ public class TicTacToeController {
 	 * 
 	 * @param ctx
 	 * @return new instance of Move object
-	 * @throws BadRequestResponse
+	 * @throws BadRequestResponse if player doesn't exist, missing information
 	 */
-	Move parseMoveFromRequest(Context ctx) {
-		// parse information from context
+	private Move parseMoveFromRequest(Context ctx) throws BadRequestResponse {
+		// parse information from context; note OK if currentPlayer is null; in this
+		// case, move is unassigned to a player and issue will be handled by calling method
 		Player currentPlayer = ctx.pathParam("playerId") == "1" ? gameBoard.getP1() : gameBoard.getP2();
+
 		String moveX = ctx.formParam("x");
 		String moveY = ctx.formParam("y");
 
-		// test cases where user is playing via API end points; these two issues are not
+		// test cases where user is playing via API end points; these issues are not
 		// possible when using the UI but should be considered
 		if (moveX == null || moveY == null) {
 			throw new BadRequestResponse("To make a game move, players must submit a board "
 					+ "row number (X) and column number (Y) (e.g., x=0&y=0");
+		}
+		
+		if (currentPlayer == null) {
+			throw new BadRequestResponse("In order to process a move, the ID of the player "
+					+ "must be specified. Got null.");
 		}
 
 		int x, y;

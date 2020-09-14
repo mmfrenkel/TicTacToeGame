@@ -2,6 +2,11 @@ package controllers;
 
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
+import models.GameBoard;
+import models.Message;
+import models.MessageStatus;
+import models.Move;
+import models.Player;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -20,20 +25,21 @@ import com.google.gson.JsonParser;
 
 class TicTacToeControllerTest {
 
-	private Context ctx = mock(Context.class);
-	
-	private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
+	private Context ctx;
 	
 	private TicTacToeController tttcontroller;
+	
+	private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
 
 	@BeforeEach
-	void setController() {
+	void refreshTest() {
 		tttcontroller = new TicTacToeController();
+		ctx = mock(Context.class);
 	}
 
 	@Test()
 	@DisplayName("Invalid request; first player can only select 'X' or 'O'.")
-	void POST_to_create_player_one_invalid_type() {
+	void createPlayerOneInValid() {
 
 		when(ctx.formParam("type")).thenReturn("P"); // P is not a valid selection
 
@@ -44,7 +50,7 @@ class TicTacToeControllerTest {
 
 	@Test()
 	@DisplayName("Valid request to create first player.")
-	void POST_to_create_player_one_valid_type() {
+	void createPlayerOneValid() {
 
 		when(ctx.formParam("type")).thenReturn("X");
 
@@ -54,7 +60,7 @@ class TicTacToeControllerTest {
 
 	@Test()
 	@DisplayName("Gameboard conversion to JSON failed to produce expected format.")
-	void convert_gameboard_to_json() {
+	void convertGameBoardToJSON() {
 
 		JsonParser parser = new JsonParser();
 		
@@ -68,3 +74,4 @@ class TicTacToeControllerTest {
 		assertEquals(parser.parse(expectedBoardAsJson), parser.parse(boardAsJson));
 	}
 }
+

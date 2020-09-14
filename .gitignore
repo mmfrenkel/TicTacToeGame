@@ -25,3 +25,5 @@ hs_err_pid*
 # Files produced on editing
 *.swp
 
+# produced my mac OS
+.DS_Store
