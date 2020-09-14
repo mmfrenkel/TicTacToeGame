@@ -7,10 +7,7 @@ import com.google.gson.annotations.Expose;
 
 public class GameBoard {
 
-	/*
-	 * -- @Expose to tell gson to add only the below fields to json returned to user
-	 * --
-	 */
+	/* - @Expose tells gson to add only the below fields to json - */
 
 	@Expose
 	private Player p1;
@@ -53,8 +50,7 @@ public class GameBoard {
 	}
 
 	/* Secondary Constructor helpful for easy testing */
-	public GameBoard(Player p1, Player p2, boolean gameStarted, int turn, 
-			char[][] state, int winner, boolean isDraw) {
+	public GameBoard(Player p1, Player p2, boolean gameStarted, int turn, char[][] state, int winner, boolean isDraw) {
 		this.p1 = p1;
 		this.p2 = p2;
 		this.gameStarted = gameStarted;
@@ -82,7 +78,7 @@ public class GameBoard {
 
 	/**
 	 * Is the game board already full without a winner? Then its a draw game and no
-	 * one wins.
+	 * one wins. :(
 	 * 
 	 * @return true if the game board is full, else false
 	 */
@@ -125,12 +121,12 @@ public class GameBoard {
 		// 3. If it's not the player's turn, cannot make move
 		else if (move.getPlayerId() != getTurn()) {
 			message = new Message(false, MessageStatus.OTHER_PLAYERS_TURN,
-					"It is currently Player " + getTurn() + "'s turn!");
+					"It is not currently your turn; it is currently Player " + getTurn() + "gets to make a move.");
 		}
 		// 4. If the submitted move is not available, cannot make move
 		else if (!isValidMove(move)) {
 			message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED,
-					"Cannot move " + move.getPlayer().getType() + "(" + move.getMoveX() + ", " + move.getMoveY()
+					"Cannot move " + move.getPlayer().getType() + " to (" + move.getMoveX() + ", " + move.getMoveY()
 							+ "); please choose unoccupied position within coordinates (0,0) to (2,2).");
 		}
 		// 5. If the board was already won, then cannot make another move
@@ -166,10 +162,10 @@ public class GameBoard {
 
 	/**
 	 * Is the move provided a valid move (i.e., to a position that is currently
-	 * unoccupied?
+	 * unoccupied and to a position that exists on the board)?
 	 * 
 	 * @param move Instance of Move object
-	 * @return If the Move is valid
+	 * @return true if the Move is valid, else false
 	 */
 	public boolean isValidMove(Move move) {
 		int x = move.getMoveX();
@@ -192,7 +188,7 @@ public class GameBoard {
 	 * was a winning move; if so, update the board to reflect the change in board
 	 * state .
 	 * 
-	 * @param move Instance of Move object
+	 * @param move Instance of Move object representing player and position to play
 	 */
 	public void playMove(Move move) {
 		int x = move.getMoveX();
@@ -222,7 +218,7 @@ public class GameBoard {
 	 * Given a row index and a move type, determine if the move completes the row
 	 * specified.
 	 * 
-	 * @param row  integer, index of a row
+	 * @param row  integer, index of a row in game board
 	 * @param type char, a move type; either 'X' or 'O'
 	 * @return if it is a winning row
 	 */
@@ -242,7 +238,7 @@ public class GameBoard {
 	 * Given a column index and a move type, determine if the move completes the
 	 * column specified.
 	 * 
-	 * @param column integer, index of a column
+	 * @param column integer, index of a column in game board
 	 * @param type   char, a move type; either 'X' or 'O'
 	 * @return if it is a winning column
 	 */
@@ -325,8 +321,7 @@ public class GameBoard {
 	 * player whose type has already been taken (i.e., when Player 1 has already
 	 * chosen 'X' as it's type you cannot set Player 2 to also have 'X').
 	 * 
-	 * @param p2 Instance of Player object, representing the second player to join
-	 *           game
+	 * @param p2 Instance of Player object, representing the 2nd player to join
 	 * @throws InvalidGameBoardConfigurationException
 	 */
 	public void setP2(Player p2) throws InvalidGameBoardConfigurationException {
@@ -351,7 +346,18 @@ public class GameBoard {
 		return turn;
 	}
 
+	/**
+	 * Set the turn of the player via passing the ID of that player.
+	 * 
+	 * @param turn
+	 * @throws InvalidGameBoardConfigurationException if invalid player ID provided
+	 */
 	public void setTurn(int turn) {
+
+		if (turn < 1 || turn > 2) {
+			throw new InvalidGameBoardConfigurationException(
+					"The only positions that exist on this board are positions 1 and 2; got " + turn);
+		}
 		this.turn = turn;
 	}
 
@@ -359,7 +365,27 @@ public class GameBoard {
 		return boardState;
 	}
 
+	/**
+	 * Sets the board state; must be 2D array of correct size and containing only
+	 * the correct possible piece types (null, X or O).
+	 * 
+	 * @param boardState 2D array containing current configuration of board
+	 * @throws InvalidGameBoardConfigurationException if board submitted is invalid
+	 */
 	public void setBoardState(char[][] boardState) {
+
+		if (boardState.length != ROWS || boardState[0].length != COLUMNS) {
+			throw new InvalidGameBoardConfigurationException("Board must be " + ROWS + "x" + COLUMNS + " in size.");
+		}
+
+		for (char[] row : boardState) {
+			for (char move : row) {
+				if (move != 0 && !acceptedTypes().contains(move)) {
+					throw new InvalidGameBoardConfigurationException(
+							"Board submitted contained unexpected pieces; only 'X' and 'O' expected.");
+				}
+			}
+		}
 		this.boardState = boardState;
 	}
 
@@ -367,7 +393,18 @@ public class GameBoard {
 		return winner;
 	}
 
+	/**
+	 * Set a winner for the board by player ID.
+	 * 
+	 * @param winner integer representing player number, either 1 or 2.
+	 * @throws InvalidGameBoardConfigurationException if invalid player ID provided
+	 */
 	public void setWinner(int winner) {
+
+		if (winner < 1 || winner > 2) {
+			throw new InvalidGameBoardConfigurationException(
+					"The only positions that exist on this board are positions 1 and 2; got " + turn);
+		}
 		this.winner = winner;
 	}
 
@@ -385,7 +422,7 @@ public class GameBoard {
 
 	/**
 	 * Prints out the game board as a 3 x 3 square, visually similar to the board
-	 * shown in web UI.
+	 * shown in web UI. Helpful for logging and debugging.
 	 */
 	public void printBoard() {
 		System.out.println("-----");

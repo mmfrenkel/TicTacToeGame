@@ -139,7 +139,7 @@ public class TicTacToeController {
 	private Move parseMoveFromRequest(Context ctx) throws BadRequestResponse {
 		// parse information from context; note OK if currentPlayer is null; in this
 		// case, move is unassigned to a player and issue will be handled by calling method
-		Player currentPlayer = ctx.pathParam("playerId") == "1" ? gameBoard.getP1() : gameBoard.getP2();
+		Player currentPlayer = ctx.pathParam("playerId").equals("1") ? gameBoard.getP1() : gameBoard.getP2();
 
 		String moveX = ctx.formParam("x");
 		String moveY = ctx.formParam("y");
@@ -159,7 +159,7 @@ public class TicTacToeController {
 		int x, y;
 		try {
 			x = Integer.parseInt(moveX);
-			y = Integer.parseInt(moveX);
+			y = Integer.parseInt(moveY);
 		} catch (NumberFormatException nfe) {
 			// position played is not, in fact, represented by numbers
 			throw new BadRequestResponse("Players can only submit integer values to indiciate " + "a gave move; got "

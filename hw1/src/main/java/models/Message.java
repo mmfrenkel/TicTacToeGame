@@ -10,16 +10,22 @@ public class Message {
 	private boolean moveValidity;
 
 	@Expose
-	private MessageStatus code;
+	private int code;
 
 	@Expose
 	private String message;
 	
 	/* -- end fields to serialize here -- */
 	
-	public Message(boolean moveValidity, MessageStatus code, String message) {
+	public Message(boolean moveValidity, int code, String message) {
 		this.moveValidity = moveValidity;
 		this.code = code;
+		this.message = message;
+	}
+	
+	public Message(boolean moveValidity, MessageStatus code, String message) {
+		this.moveValidity = moveValidity;
+		this.code = code.getValue();
 		this.message = message;
 	}
 
@@ -31,11 +37,11 @@ public class Message {
 		this.moveValidity = moveValidity;
 	}
 
-	public MessageStatus getCode() {
-		return code;
+	public int getCode() {
+		return this.code;
 	}
 
-	public void setCode(MessageStatus code) {
+	public void setCode(int code) {
 		this.code = code;
 	}
 

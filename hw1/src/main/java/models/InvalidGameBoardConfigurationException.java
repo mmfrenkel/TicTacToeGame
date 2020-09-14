@@ -1,6 +1,6 @@
 package models;
 
-public class InvalidGameBoardConfigurationException extends Exception {
+public class InvalidGameBoardConfigurationException extends RuntimeException {
     /**
 	 * Added default serialVersionUID
 	 */

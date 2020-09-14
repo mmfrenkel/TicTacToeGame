@@ -1,9 +1,13 @@
 package models;
 
+import com.google.gson.annotations.Expose;
+
 public class Player {
 
+	@Expose
 	private char type;
 
+	@Expose
 	private int id;
 
 	public Player(char type, int id) {
