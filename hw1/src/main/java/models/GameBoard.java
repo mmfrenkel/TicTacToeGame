@@ -438,4 +438,10 @@ public class GameBoard {
 		}
 		System.out.println("-----");
 	}
+
+	@Override
+	public String toString() {
+		return "GameBoard [p1=" + p1 + ", p2=" + p2 + ", gameStarted=" + gameStarted + ", turn=" + turn
+				+ ", boardState=" + Arrays.toString(boardState) + ", winner=" + winner + ", isDraw=" + isDraw + "]";
+	}
 }

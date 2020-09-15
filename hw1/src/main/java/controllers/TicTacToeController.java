@@ -3,8 +3,12 @@ package controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
+
 import models.GameBoard;
 import models.Message;
 import models.Move;
@@ -15,6 +19,8 @@ public class TicTacToeController {
 	private GameBoard gameBoard;
 
 	private static Logger logger = LoggerFactory.getLogger(PlayGame.class);
+	
+	private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
 
 	public TicTacToeController() {
 		this.gameBoard = new GameBoard();
@@ -48,9 +54,10 @@ public class TicTacToeController {
 		// Parse player 1 information then add player one to the game
 		Player player1 = parsePlayerOneFromRequest(ctx);
 		gameBoard.setP1(player1);
-		logger.info("Added first player to the game. Player 1: " + player1);
+		logger.info("Added first player to the game: " + player1);
+		logger.info(gameBoard.toString());
 
-		ctx.json(gameBoard);
+		ctx.result(getGameBoardAsJson());
 		ctx.status(200);
 		return ctx;
 	}
@@ -68,6 +75,8 @@ public class TicTacToeController {
 		// if first player doesn't already exist, then
 		// redirect to the start game end point so they can choose a
 		if (gameBoard.getP1() == null) {
+			logger.info("Currently there is no game to join (no Player 1 yet). "
+					+ "Redirecting to new game. Board State: " + gameBoard);
 			ctx.redirect("/newgame");
 			return ctx;
 		}
@@ -94,7 +103,7 @@ public class TicTacToeController {
 
 		Message message = gameBoard.processPlayerMove(move);
 
-		ctx.json(message);
+		ctx.result(gson.toJson(message));
 		return ctx;
 	}
 
@@ -172,6 +181,10 @@ public class TicTacToeController {
 
 	public GameBoard getGameBoard() {
 		return gameBoard;
+	}
+	
+	public String getGameBoardAsJson() {
+		return gson.toJson(gameBoard);
 	}
 
 	public void setGameBoard(GameBoard gameBoard) {

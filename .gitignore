@@ -24,6 +24,7 @@ hs_err_pid*
 
 # Files produced on editing
 *.swp
+.Rhistory
 
 # produced my mac OS
 .DS_Store

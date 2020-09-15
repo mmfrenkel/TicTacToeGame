@@ -2,6 +2,7 @@ package controllers;
 
 import io.javalin.Javalin;
 import io.javalin.plugin.json.JavalinJson;
+import models.Message;
 
 import java.io.IOException;
 import java.util.Queue;
@@ -19,8 +20,6 @@ class PlayGame {
 	private static Javalin app;
 
 	private static Logger logger = LoggerFactory.getLogger(PlayGame.class);
-	
-	private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
 
 	/**
 	 * Main method of the application.
@@ -33,8 +32,8 @@ class PlayGame {
 		TicTacToeController tttcontroller = new TicTacToeController();
 		
 		// configure controller to use Gson instead of Jackson for object->json mapping
-		JavalinJson.setToJsonMapper(gson::toJson);
-		JavalinJson.setFromJsonMapper(gson::fromJson);
+		// JavalinJson.setToJsonMapper(gson::toJson);
+		// JavalinJson.setFromJsonMapper(gson::fromJson);
 
 		app = Javalin.create(config -> {
 			config.addStaticFiles("/public");
@@ -54,13 +53,14 @@ class PlayGame {
 		});
 
 		app.get("/joingame", ctx -> {
+			logger.info("Received request to add a second player.");
 			tttcontroller.addSecondPlayer(ctx);
-			sendGameBoardToAllPlayers(gson.toJson(tttcontroller.getGameBoard()));
+			sendGameBoardToAllPlayers(tttcontroller.getGameBoardAsJson());
 		});
 
 		app.post("/move/:playerId", ctx -> {
 			tttcontroller.processPlayerMove(ctx);
-			sendGameBoardToAllPlayers(gson.toJson(tttcontroller.getGameBoard()));
+			sendGameBoardToAllPlayers(tttcontroller.getGameBoardAsJson());
 		});
 
 		// Web sockets - DO NOT DELETE or CHANGE
