@@ -31,7 +31,7 @@ public class GameBoard {
   
   /* -- end fields to serialize to JSON from object here -- */
 
-  // a standard tic tac toe board has 3 rows and 3 columns  
+  // a standard tic-tac-toe board has 3 rows and 3 columns  
   private final int columns = 3;
 
   private final int rows = 3;
