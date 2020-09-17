@@ -3,6 +3,8 @@ package controllers;
 import io.javalin.Javalin;
 import java.io.IOException;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,8 @@ class PlayGame {
       tttcontroller.startGame(ctx);
     });
     
+    // Warning: Often takes a long time for the web page for Player 2 to fully resolve itself
+    // and show that Player 1 has the first move
     app.get("/joingame", ctx -> {
       logger.info("Received request to add a second player.");
       tttcontroller.addSecondPlayer(ctx);

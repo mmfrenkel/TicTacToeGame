@@ -38,7 +38,7 @@ public class TicTacToeController {
     ctx.redirect("/tictactoe.html");
     return ctx;
   }
-  
+
   /**
    * Creates player one with their selected type (i.e., 'X' or 'O'). First player
    * to join game will always be player 1; however the game does not officially
@@ -46,8 +46,16 @@ public class TicTacToeController {
    * 
    * @param ctx Context object for incoming request
    * @return Updated Context object
+   * @throws BadRequestResponse if there is already a Player 1 or if an invalid
+   *                            player type was provided
    */
   public Context startGame(Context ctx) {
+    
+    // if there is already a player 1, we don't want to kick them out!
+    if (gameBoard.getP1() != null) {
+      throw new BadRequestResponse("There is already a Player 1 for this gameBoard."
+          + " If you'd like to start a new game, please visit our /newgame endpoint.");
+    }
   
     // Parse player 1 information then add player one to the game
     Player player1 = parsePlayerOneFromRequest(ctx);
@@ -67,8 +75,15 @@ public class TicTacToeController {
    * 
    * @param ctx Context object from incoming request
    * @return Updated Context object
+   * @throws BadRequestResponse if Player 2 already exists for this game
    */
   public Context addSecondPlayer(Context ctx) {
+    
+    // if there is already a player 2, we don't want to kick them out!
+    if (gameBoard.getP2() != null) {
+      throw new BadRequestResponse("There is already a Player 2 for this gameBoard."
+          + " If you'd like to start a new game, please visit our /newgame endpoint.");
+    }
   
     // if first player doesn't already exist, then redirect to the start game end
     // point so they can choose their player type
