@@ -30,15 +30,18 @@ public class GameBoard {
   private boolean isDraw;
   
   /* -- end fields to serialize to JSON from object here -- */
-  
+
+  // a standard tic tac toe board has 3 rows and 3 columns  
   private final int columns = 3;
-  
+
   private final int rows = 3;
   
+  // the accepted player types for this board
   private final List<Character> acceptedTypes = Arrays.asList('X', 'O');
   
   /**
-   *  Primary Constructor for GameBoard().
+   *  Primary Constructor for GameBoard(), which will create an empty game board (i.e.,
+   *  no players, game not started, no one's turn, empty board state, and no winner or draw.
    */
   public GameBoard() {
     this.p1 = null;
@@ -51,7 +54,20 @@ public class GameBoard {
   }
   
   /**
-   * Secondary Constructor helpful for easy testing.
+   * Secondary Constructor primarily for easy testing, where a user is able to
+   * provide any configuration of the board that they'd like. As a
+   * warning, this constructor does not check for invalid configurations and
+   * assumes a user understands the tic-tac-toe board game rules.
+   * 
+   * @param p1          instance of Player object, representing player 1
+   * @param p2          instance of Player object, representing player 2
+   * @param gameStarted boolean, for if game has started
+   * @param turn        integer, representing the ID of the player who has the
+   *                    next turn (1 or 2)
+   * @param state       two-dimensional array of characters representing game
+   *                    board state
+   * @param winner      integer representing player ID of winner; 0 if no winner
+   * @param isDraw      boolean, for if the game is already a draw
    */
   public GameBoard(Player p1, Player p2, boolean gameStarted, int turn, char[][] state, 
       int winner, boolean isDraw) {
@@ -311,20 +327,33 @@ public class GameBoard {
     return false;
   }
   
+  /**
+   *  Returns Player currently set as player 1; null if 
+   *  player does not exist yet.
+   */
   public Player getP1() {
     return p1;
   }
   
+  /**
+   * Sets Player 1 on the game board.
+   *  
+   * @param p1  instance of Player object
+   */
   public void setP1(Player p1) {
     this.p1 = p1;
   }
   
+  /**
+   *  Returns Player currently set as player 2; null if 
+   *  player does not exist yet.
+   */
   public Player getP2() {
     return p2;
   }
   
   /**
-   * Method to auto-set player 2 as the player type that player 1 is not. For
+   * Will auto-set player 2 as the player type that player 1 is not. For
    * example, if player 1 already exists and has chosen type 'X', then player 2
    * will be 'O'.
    */
@@ -353,14 +382,35 @@ public class GameBoard {
     this.p2 = p2;
   }
   
+  /**
+   * Determines if game has started. A game is started only when there are two
+   * valid players on the game board.
+   * 
+   * @return true if game has begun, else false
+   */
   public boolean isGameStarted() {
     return gameStarted;
   }
   
+  /**
+   * Sets the game as started; in order to do so, there must be two players on the
+   * game board.
+   * 
+   * @throws InvalidGameBoardConfigurationException if two players don't yet exist
+   */
   public void setGameStarted(boolean gameStarted) {
+    if (getP1() == null || getP2() == null) {
+      throw new InvalidGameBoardConfigurationException("Cannot set game as 'started' "
+          + "until there are two players on the gameboard.");
+    }
+    
     this.gameStarted = gameStarted;
   }
   
+  /**
+   * Returns the ID of the player who has the next turn.
+   * @return integer, representing ID of player
+   */
   public int getTurn() {
     return turn;
   }
@@ -368,8 +418,10 @@ public class GameBoard {
   /**
    * Set the turn of the player via passing the ID of that player.
    * 
-   * @param turn  Integer representing the ID of the player who has the next turn
-   * @throws InvalidGameBoardConfigurationException if invalid player ID provided
+   * @param turn Integer representing the ID of the player who has the next turn
+   * @throws InvalidGameBoardConfigurationException if invalid player ID provided,
+   *                                                or if the player whose ID is
+   *                                                passed doesn't exist yet
    */
   public void setTurn(int turn) {
   
@@ -377,9 +429,20 @@ public class GameBoard {
       throw new InvalidGameBoardConfigurationException("The only positions that "
           + "exist on this board are positions 1 and 2; got " + turn);
     }
+    
+    if ((turn == 1 && getP1() == null) || (turn == 2 && getP2() == null)) {
+      throw new InvalidGameBoardConfigurationException("Cannot set the turn for a player that"
+          + "does not exist on the game board yet.");
+    }
+    
     this.turn = turn;
   }
   
+  /**
+   * Returns the state of the board.
+   * 
+   * @return A two-dimensional array of characters representing board state
+   */
   public char[][] getBoardState() {
     return boardState;
   }
@@ -409,6 +472,11 @@ public class GameBoard {
     this.boardState = boardState;
   }
   
+  /**
+   * Returns the ID of the winner of the game, or 0 if there is no winner yet.
+   * 
+   * @return ID of winning player
+   */
   public int getWinner() {
     return winner;
   }
@@ -428,14 +496,41 @@ public class GameBoard {
     this.winner = winner;
   }
   
+  /**
+   * Returns whether or not the game is a draw. If true, the game board
+   * is full and there are no more moves to be made.
+   */
   public boolean isDraw() {
     return isDraw;
   }
   
+  /**
+   * Set whether or not the game board is a draw (i.e., game board is full and
+   * there is no winner).
+   * 
+   * @param isDraw boolean, whether or not game is a draw
+   * @throw InvalidGameBoardConfigurationException if the game board does not meet
+   *        the qualifications of a draw.
+   */
   public void setDraw(boolean isDraw) {
+    
+    if (!isFull()) {
+      throw new InvalidGameBoardConfigurationException("Game board is not yet full, "
+          + "so there cannot be a draw yet.");
+    }
+    if (getWinner() != 0) {
+      throw new InvalidGameBoardConfigurationException("There is a winner on this game board,"
+          + "so this game is not a draw.");
+    }
+    
     this.isDraw = isDraw;
   }
   
+  /**
+   * Gets the accepted player 'types' for the game board.
+   * 
+   * @return List of characters representing value types.
+   */
   public List<Character> acceptedTypes() {
     return this.acceptedTypes;
   }

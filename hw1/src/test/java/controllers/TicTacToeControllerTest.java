@@ -10,6 +10,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
+import models.Player;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,17 +53,37 @@ class TicTacToeControllerTest {
   
   @Test()
   @DisplayName("Gameboard conversion to JSON failed to produce expected format.")
-  void convertGameBoardToJson() {
+  void convertGameBoardToJsonEmpty() {
   
     JsonParser parser = new JsonParser();
     
     String boardAsJson = gson.toJson(tttcontroller.getGameBoard());
     
-    String expectedBoardAsJson = "{\"gameStarted\":false,\"turn\":1," 
+    String expectedBoardAsJson = "{\"gameStarted\":false,\"turn\":0," 
         + "\"boardState\":[[\"\\u0000\",\"\\u0000\",\"\\u0000\"]," 
         + "[\"\\u0000\",\"\\u0000\",\"\\u0000\"],[\"\\u0000\",\"\\u0000\",\"\\u0000\"]]," 
         + "\"winner\":0,\"isDraw\":false}";
     
+    assertEquals(parser.parse(expectedBoardAsJson), parser.parse(boardAsJson));
+  }
+  
+  
+  @Test()
+  @DisplayName("Gameboard conversion to JSON failed to produce expected format.")
+  void convertGameBoardToJsonPlayer1() {
+    
+    tttcontroller.getGameBoard().setP1(new Player('X', 1));
+  
+    JsonParser parser = new JsonParser();
+    
+    String boardAsJson = gson.toJson(tttcontroller.getGameBoard());
+    
+    String expectedBoardAsJson = "{\"p1\":{\"type\":\"X\",\"id\":1},"
+        + "\"gameStarted\":false,\"turn\":0,"
+        + "\"boardState\":[[\"\\u0000\",\"\\u0000\",\"\\u0000\"],"
+        + "[\"\\u0000\",\"\\u0000\",\"\\u0000\"],[\"\\u0000\",\"\\u0000\",\"\\u0000\"]],"
+        + "\"winner\":0,\"isDraw\":false}";
+
     assertEquals(parser.parse(expectedBoardAsJson), parser.parse(boardAsJson));
   }
 }

@@ -134,10 +134,20 @@ public class TicTacToeController {
     return gson.toJson(gameBoard);
   }
   
+  /**
+   * Returns the current game board.
+   * 
+   * @return instance of GameBoard class
+   */
   public GameBoard getGameBoard() {
     return gameBoard;
   }
-  
+
+  /**
+   * Sets the current game board.
+   * 
+   * @param gameBoard instance of GameBoard class
+   */
   public void setGameBoard(GameBoard gameBoard) {
     this.gameBoard = gameBoard;
   }
