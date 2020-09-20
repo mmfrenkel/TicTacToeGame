@@ -1,8 +1,9 @@
 package models;
 
 /*
- * Example for enumerated options implementation from B. Gurung at StackOverflow
- * on Sep 10, 2020 at https://rb.gy/fa9urh.
+ * Design for class to hold enumerated options 
+ * was inspired by an implementation from B. Gurung at StackOverflow
+ * on 01/10/2012 at https://rb.gy/fa9urh (last viewed Sep 10, 2020).
  */
 public enum MessageStatus {
   

@@ -53,7 +53,9 @@ If player 1 already exists on the gameboard then the user is notified that they 
 
 ## Development
 
-This project was developed on macOS Catalina (Version 10.15.6) with IDE support from Eclipse using Java 11.0.2. No need to install a server; it is easiest to run the program simply by right-clicking on the `PlayGame.java` file in Eclipse and running it as a Java application.
+This project was developed on macOS Catalina (Version 10.15.6) with IDE support from Eclipse using Java 11.0.2. The UI was tested using Postman and both Safari and Chrome as web browsers.
+
+To run this project, there is no need to install a server; it is easiest to run the program simply by right-clicking on the `PlayGame.java` file in Eclipse and running it as a Java application.
 
 There is a test suite built for this project, which can by issuing the following command in the command line (or by using the Eclipse UI):
 ```
