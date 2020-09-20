@@ -53,8 +53,10 @@ public class TicTacToeController {
     
     // if there is already a player 1, we don't want to kick them out!
     if (gameBoard.getP1() != null) {
-      throw new BadRequestResponse("There is already a Player 1 for this gameBoard."
-          + " If you'd like to start a new game, please visit our /newgame endpoint.");
+      throw new BadRequestResponse("There is already a Player 1 for this game board."
+          + " If you'd like to start a new game, please visit our /newgame endpoint, "
+          + "or to join the existing game, ask Player 1 to share his join link, "
+          + "or vist our /joingame enpoint.");
     }
   
     // Parse player 1 information then add player one to the game
@@ -81,7 +83,7 @@ public class TicTacToeController {
     
     // if there is already a player 2, we don't want to kick them out!
     if (gameBoard.getP2() != null) {
-      throw new BadRequestResponse("There is already a Player 2 for this gameBoard."
+      throw new BadRequestResponse("Sorry, there are already two players for this game board."
           + " If you'd like to start a new game, please visit our /newgame endpoint.");
     }
   
@@ -89,7 +91,7 @@ public class TicTacToeController {
     // point so they can choose their player type
     if (gameBoard.getP1() == null) {
       logger.info("Currently there is no game to join (no Player 1 yet). "
-          + "Redirecting to new game. Board State: " + gameBoard);
+          + "Redirecting user to new game. Board State: " + gameBoard);
       ctx.redirect("/newgame");
       return ctx;
     }
@@ -144,7 +146,10 @@ public class TicTacToeController {
   }
 
   /**
-   * Sets the current game board.
+   * Sets the current game board configuration. Method
+   * is helpful for testing purposes, but it not recommended 
+   * otherwise, as there is currently no support for testing
+   * invalid configurations.
    * 
    * @param gameBoard instance of GameBoard class
    */

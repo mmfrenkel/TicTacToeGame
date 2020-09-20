@@ -330,6 +330,8 @@ public class GameBoard {
   /**
    *  Returns Player currently set as player 1; null if 
    *  player does not exist yet.
+   *  
+   *  @return instance of Player representing Player 1
    */
   public Player getP1() {
     return p1;
@@ -347,6 +349,8 @@ public class GameBoard {
   /**
    *  Returns Player currently set as player 2; null if 
    *  player does not exist yet.
+   *  
+   *  @return instance of Player representing Player 2
    */
   public Player getP2() {
     return p2;
@@ -381,7 +385,7 @@ public class GameBoard {
     }
     this.p2 = p2;
   }
-  
+
   /**
    * Determines if game has started. A game is started only when there are two
    * valid players on the game board.
@@ -391,7 +395,7 @@ public class GameBoard {
   public boolean isGameStarted() {
     return gameStarted;
   }
-  
+
   /**
    * Sets the game as started; in order to do so, there must be two players on the
    * game board.
@@ -409,12 +413,13 @@ public class GameBoard {
   
   /**
    * Returns the ID of the player who has the next turn.
+   * 
    * @return integer, representing ID of player
    */
   public int getTurn() {
     return turn;
   }
-  
+
   /**
    * Set the turn of the player via passing the ID of that player.
    * 
@@ -449,7 +454,7 @@ public class GameBoard {
   
   /**
    * Sets the board state; must be 2D array of correct size and containing only
-   * the correct possible piece types (null, X or O).
+   * the correct possible piece types (0 (null), X or O).
    * 
    * @param boardState 2D array containing current configuration of board
    * @throws InvalidGameBoardConfigurationException if board submitted is invalid

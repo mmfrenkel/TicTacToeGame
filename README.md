@@ -1,4 +1,4 @@
-# Public Assignment for COMS W4156: Tic-Tac-Toe Web Application
+#  Tic-Tac-Toe Web Application
 
 ## About Tic-Tac-Toe
 The project enables a simple tic-tac-toe game between two users. Tic-tac-toe is a game where two players compete to fulfill a row, column or horizontal position on a 3 x 3 board with their game piece, either an 'X' or an 'O'. Player's alternate taking turns, trying to strategically position their moves so that they get closer to winning without the other player winning first. The first complete a row, column or horizontal wins.
@@ -46,7 +46,9 @@ The project includes the following endpoints, which can be utilized for testing 
   "isDraw": false
 }
 ```
-* `GET /joingame`: Allows player 2 to join the gameboard, assigns whatever piece player 1 did not take, and redirects player 2 to their game board. This offically allows the game to commence, as the updated gameboard configuration is broadcast to both users.
+If player 1 already exists on the gameboard then the user is notified that they need to go to either `/joingame`, ask Player 1 for the join url, or start a new game `/newgame`. 
+
+* `GET /joingame`: Allows player 2 to join the gameboard, assigns whatever piece player 1 did not take, and redirects player 2 to their game board. This offically allows the game to commence, as the updated gameboard configuration is broadcast to both users. If there are already 2 players on the board, the user will be notified that the game board is full and they should visit `/newgame` to start a new game.
 * `POST /move/:playerId`: Allows a player specified by their `playerId` to make a move on the gameboard, where the move itself is specified in the following format:`x=0&y=0`, where this specifies a move to (0, 0). Once the player has made a move, erronous moves are reported back to the user and updates to the gameboard configuration are broadcast to both users. 
 
 ## Development
@@ -58,7 +60,12 @@ There is a test suite built for this project, which can by issuing the following
 $ mvn test
 ```
 
+This project uses Checkstyle as a tool for ensuring that this code adheres to industry coding standards. Run the checkstyle tool by issuing the command below and reviewing the output found at `target/site/images/checkstyle.html`.
+```
+$ mvn checkstyle:checkstyle
+```
+
 ## Credits
 
-Starter code for this project, including all of the HTML, CSS and JS code as well as code for web socket interaction and model/controller templates, was provided by Shirish Singh and Professor Gail Kaiser as part of the Fall 2020 Advanced Software Engineering course at Columbia University (COMS 4156). 
+The conceptualization and starter code for this project, including all of the HTML, CSS and JS code as well as code for web socket interaction and model/controller templates, were provided by Shirish Singh and Professor Gail Kaiser as part of the Fall 2020 Advanced Software Engineering course at Columbia University (COMS 4156). 
 
