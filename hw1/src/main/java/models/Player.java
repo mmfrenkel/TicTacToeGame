@@ -62,6 +62,16 @@ public class Player {
   }
   
   @Override
+  public boolean equals(Object o) {
+    
+    if (!(o instanceof Player)) {
+      return false;
+    }
+    Player compared = (Player) o;
+    return compared.getType() == this.getType() && compared.getId() == this.getId();
+  }
+  
+  @Override
   public String toString() {
     return "Player [type=" + type + ", id=" + id + "]";
   }

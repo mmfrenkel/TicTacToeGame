@@ -89,5 +89,17 @@ public class Move {
     return "Move [player=" + player + ", moveX=" + moveX 
         + ", moveY=" + moveY + "]";
   }
+  
+  @Override
+  public boolean equals(Object o) {
+    
+    if (!(o instanceof Move)) {
+      return false;
+    }
+    Move compared = (Move) o;
+    return compared.getPlayer().equals(this.getPlayer()) 
+        && compared.getMoveX() == this.getMoveX() 
+        && compared.getMoveY() == this.getMoveY();
+  }
 
 }

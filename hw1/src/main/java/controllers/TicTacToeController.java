@@ -36,6 +36,7 @@ public class TicTacToeController {
     
     setGameBoard(new GameBoard()); // used to reset gameBoard when necessary
     ctx.redirect("/tictactoe.html");
+    ctx.status(200);
     return ctx;
   }
 
@@ -93,6 +94,7 @@ public class TicTacToeController {
       logger.info("Currently there is no game to join (no Player 1 yet). "
           + "Redirecting user to new game. Board State: " + gameBoard);
       ctx.redirect("/newgame");
+      ctx.status(302);  // redirect
       return ctx;
     }
     
@@ -100,7 +102,8 @@ public class TicTacToeController {
     gameBoard.setGameStarted(true);
     
     logger.info("Added second player; game board is now ready. Player 2: " + gameBoard.getP2());
-    ctx.redirect("/tictactoe.html?p=2");
+    ctx.redirect("/tictactoe.html?p=2"); 
+    ctx.status(200);
     return ctx;
   }
   
@@ -121,6 +124,9 @@ public class TicTacToeController {
     
     logger.info("Outcome of processed move: " + message);
     ctx.result(gson.toJson(message));
+    
+    System.out.println(gson.toJson(message));
+    ctx.status(200);
     return ctx;
   }
   
@@ -166,7 +172,7 @@ public class TicTacToeController {
    *                            values; default Javalin 400 response
    */
   private Player parsePlayerOneFromRequest(Context ctx) {
-  
+
     // options for the form parameter "type" are "X" or "O"
     String submittedType = ctx.formParam("type");
     
@@ -180,23 +186,25 @@ public class TicTacToeController {
     
     return new Player(submittedType.charAt(0), 1);
   }
-  
+
   /**
    * Extracts submitted information from context and returns a new Move() object
    * representing the requested move from the user. To protect against invalid
    * submissions by users accessing the game via an API interaction (instead of
    * UI), this method checks to be sure that both coordinates are submitted and
    * both are integer values, and that there is a valid player id submitted.
+   * Method should be made private, but is kept public for testing purposes.
    * 
-   * @param ctx  Context object from incoming request
-   * @return     new instance of Move object
+   * @param ctx Context object from incoming request
+   * @return new instance of Move object
    * @throws BadRequestResponse If an expected form parameter is missing or not
-   *                            expected type
+   *         expected type
    */
-  private Move parseMoveFromRequest(Context ctx) {
-  
+  public Move parseMoveFromRequest(Context ctx) {
+    
+    String playerId = parsePlayerIdFromPathParam(ctx);
+
     // Check for valid player ID in request
-    String playerId = ctx.pathParam("playerId");
     if (playerId == null || (!playerId.equals("1") && !playerId.equals("2"))) {
       throw new BadRequestResponse("Your request must include player Id (1 or 2) " 
           + "as a path parameter. Got " + playerId);
@@ -222,5 +230,23 @@ public class TicTacToeController {
           + "indiciate their move" + moveX + " and " + moveY);
     }
     return new Move(currentPlayer, x, y);
+  }
+
+  /**
+   * This function gets the playerId from the Context and returns it. This
+   * function was created specifically for testing purposes. It does not seem that
+   * mocking support works the same way for pathParams as formParams. As a result,
+   * you cannot easily mock with:
+   * <p>
+   * when(ctx.formParam("x")).thenReturn(null)
+   * </p>
+   * Instead, this function will remain the sole piece of code that is not able to
+   * be tested, as the rest of the code will be tested around it.
+   * 
+   * @param ctx Context object from incoming request
+   * @return String representing playerId (may be null)
+   */
+  public String parsePlayerIdFromPathParam(Context ctx) {
+    return ctx.pathParam("playerId");
   }
 }
