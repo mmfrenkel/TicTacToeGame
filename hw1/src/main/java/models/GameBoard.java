@@ -519,13 +519,13 @@ public class GameBoard {
    */
   public void setDraw(boolean isDraw) {
     
-    if (!isFull()) {
-      throw new InvalidGameBoardConfigurationException("Game board is not yet full, "
-          + "so there cannot be a draw yet.");
-    }
     if (getWinner() != 0) {
       throw new InvalidGameBoardConfigurationException("There is a winner on this game board,"
           + "so this game is not a draw.");
+    }
+    if (!isFull()) {
+      throw new InvalidGameBoardConfigurationException("Game board is not yet full, "
+          + "so there cannot be a draw yet.");
     }
     
     this.isDraw = isDraw;
@@ -562,7 +562,7 @@ public class GameBoard {
   @Override
   public String toString() {
     return "GameBoard [p1=" + p1 + ", p2=" + p2 + ", gameStarted=" + gameStarted + ", "
-        + "turn=" + turn + ", boardState=" + Arrays.toString(boardState) + ", winner=" 
+        + "turn=" + turn + ", boardState=" + Arrays.deepToString(boardState) + ", winner=" 
         + winner + ", isDraw=" + isDraw + "]";
   }
 }
