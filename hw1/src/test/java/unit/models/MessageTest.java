@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test;
 
 public class MessageTest {
 
+  /**
+   * Test that is possible to correctly create a new Move, with
+   * correct move validity.
+   */
   @Test
   @DisplayName("Message Constructor #1 should assign moveValidity")
   void testCreateMessage1() {
@@ -17,6 +21,10 @@ public class MessageTest {
     assertEquals(false, msg.isMoveValidity());
   }
 
+  /**
+   * Test that is possible to correctly create a new Move, with
+   * correct code.
+   */
   @Test
   @DisplayName("Message Constructor #1 should assign code")
   void testCreateMessage2() {
@@ -25,6 +33,10 @@ public class MessageTest {
     assertEquals(200, msg.getCode());
   }
 
+  /**
+   * Test that is possible to correctly create a new Move, with
+   * correct message.
+   */
   @Test
   @DisplayName("Message Constructor #1 should assign message")
   void testCreateMessage3() {
@@ -33,6 +45,10 @@ public class MessageTest {
     assertEquals("this is a test message", msg.getMessage());
   }
 
+  /**
+   * Test that is possible to correctly create a new Move, with
+   * correct code, using MessageStatus enum approach.
+   */
   @Test
   @DisplayName("Message Constructor #2 should be able to assign "
       + "code from MessageStatus")
@@ -43,6 +59,9 @@ public class MessageTest {
     assertEquals(100, msg.getCode());
   }
 
+  /**
+   * Test that setMoveValidity() correctly sets the Move validity.
+   */
   @Test
   @DisplayName("setMoveValidity() on Message instance should correctly "
       + "set validity of move")
@@ -53,6 +72,9 @@ public class MessageTest {
     assertEquals(true, msg.isMoveValidity());
   }
 
+  /**
+   * Test that setCode() correctly sets the Move code.
+   */
   @Test
   @DisplayName("setCode() on Message instance should correctly set code of "
       + "result for move")
@@ -63,6 +85,9 @@ public class MessageTest {
     assertEquals(100, msg.getCode());
   }
   
+  /**
+   * Test that setMessage() correctly sets the Move message.
+   */
   @Test
   @DisplayName("setMessage() on Message instance should correctly set message of "
       + "result for move")
@@ -73,6 +98,9 @@ public class MessageTest {
     assertEquals("here is another message!", msg.getMessage());
   }
 
+  /**
+   * Test that toString() correctly reflects the Message state.
+   */
   @Test
   @DisplayName("toSting() method for Message should reflect the state of "
       + "the Message instance")

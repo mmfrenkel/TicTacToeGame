@@ -135,23 +135,22 @@ public class GameBoard {
       // 2. First player should always be the one to make the first move
       message = new Message(false, MessageStatus.INVALID_ORDER_OF_PLAY, 
           "Player 1 makes the first move on an empty board!");
+      
+    } else if (getWinner() != 0) {
+      // 3. If the board was already won, then cannot make another move
+      message = new Message(false, MessageStatus.GAME_ALREADY_OVER, 
+          "Game is already over! Player " + getWinner() + " won!");
 
     } else if (move.getPlayerId() != getTurn()) {
-      // 3. If it's not the player's turn, cannot make move
+      // 4. If it's not the player's turn, cannot make move
       message = new Message(false, MessageStatus.OTHER_PLAYERS_TURN, 
           "It is not currently your turn. Player " + getTurn() + " gets to make the next move.");
       
     } else if (!isValidMove(move)) {
-      // 4. If the submitted move is not available, cannot make move
+      // 5. If the submitted move is not available, cannot make move
       message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED, 
           "You cannot make a move at (" + move.getMoveX() + ", " + move.getMoveY() + "). "
               + "Please choose an unoccupied and valid position on the game board!");
-      
-    } else if (getWinner() != 0) {
-      // 5. If the board was already won, then cannot make another move
-      message = new Message(false, MessageStatus.GAME_ALREADY_OVER, 
-          "Game is already over! Player " + getWinner() + " won!");
-    
     } else {
       // 6. Move is valid and should be played
       playMove(move);

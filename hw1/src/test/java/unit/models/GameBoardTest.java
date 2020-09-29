@@ -22,12 +22,19 @@ class GameBoardTest {
   private Player player1 = new Player('X', 1);
   private Player player2 = new Player('O', 2);
 
+  /**
+   * Setup an empty and active GameBoard for each test.
+   */
   @BeforeEach
   void setGameboard() {
     this.emptyTestBoard = new GameBoard();
-    this.activeTestBoard = new GameBoard(player1, player2, true, 1, emptyBoard, 0, false);
+    this.activeTestBoard = new GameBoard(player1, player2, true, 1, 
+        emptyBoard, 0, false);
   }
 
+  /**
+   * Test move attempts to already occupied positions.
+   */
   @Test
   @DisplayName("Moves are not allowed in already occupied positions.")
   void testIsValidMoveFalse() {
@@ -39,6 +46,10 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
 
+  /**
+   * Test that it is possible to make a move to an unoccupied position 
+   * that is at a valid location on the gameboard.
+   */
   @Test
   @DisplayName("Moves are allowed in unoccupied positions.")
   void testIsValidMoveTrue() {
@@ -50,8 +61,13 @@ class GameBoardTest {
     assertEquals(true, emptyTestBoard.isValidMove(attemptedMove));
   }
 
+  /**
+   * Test that it is not possible to make moves to positions off the gameboard
+   * (row out of range).
+   */
   @Test
-  @DisplayName("Moves are not allowed in positions off game board (row doesn't exist #1).")
+  @DisplayName("Moves are not allowed in positions off game board "
+      + "(row doesn't exist #1).")
   void testIsValidMoveFalseRowOffBoard1() {
 
     char[][] boardState = { { 0, 0, 'O' }, { 0, 0, 'X' }, { 0, 0, 0 } };
@@ -61,8 +77,13 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
 
+  /**
+   * Test that it is not possible to make moves to positions off the gameboard
+   * (row out of range; negative value).
+   */
   @Test
-  @DisplayName("Moves are not allowed in positions off game board (row doesn't exist #2).")
+  @DisplayName("Moves are not allowed in positions off game board "
+      + "(row doesn't exist #2).")
   void testIsValidMoveFalseRowOffBoard2() {
 
     char[][] boardState = { { 0, 0, 'O' }, { 0, 0, 'X' }, { 0, 0, 0 } };
@@ -72,8 +93,13 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
 
+  /**
+   * Test that it is not possible to make moves to positions off the gameboard
+   * (column out of range).
+   */
   @Test
-  @DisplayName("Moves are not allowed in positions off game board (column doesn't exist #1).")
+  @DisplayName("Moves are not allowed in positions off game board "
+      + "(column doesn't exist #1).")
   void testIsValidMoveFalseColumnOffBoard1() {
 
     char[][] boardState = { { 0, 0, 'O' }, { 0, 0, 'X' }, { 0, 0, 0 } };
@@ -83,8 +109,13 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
 
+  /**
+   * Test that it is not possible to make moves to positions off the gameboard
+   * (column out of range, negative value).
+   */
   @Test
-  @DisplayName("Moves are not allowed in positions off game board (column doesn't exist #1).")
+  @DisplayName("Moves are not allowed in positions off game board "
+      + "(column doesn't exist #1).")
   void testIsValidMoveFalseColumnOffBoard2() {
 
     char[][] boardState = { { 0, 0, 'O' }, { 0, 0, 'X' }, { 0, 0, 0 } };
@@ -94,6 +125,9 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
 
+  /**
+   * Test that the played move is reflected in the gameboard configuration.
+   */
   @Test
   @DisplayName("Played move should reflect in gameboard.")
   void testPlayMove() {
@@ -108,8 +142,11 @@ class GameBoardTest {
     assertArrayEquals(expectedBoardState, emptyTestBoard.getBoardState());
   }
 
+  /**
+   * Test that a partially full board is not a winning configuration.
+   */
   @Test
-  @DisplayName("An empty board is not a winning configuration.")
+  @DisplayName("This partially-full board is not a winning configuration.")
   void testNotWinneEmptyBoard() {
     char[][] boardState = { { 0, 0, 0 }, { 0, 0, 'X' }, { 0, 0, 0 } };
 
@@ -118,6 +155,10 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isWinningMove(1, 2, 'X'));
   }
 
+  /**
+   * Test that the current board configuration is not a winning configuration
+   * (horizontal not complete).
+   */
   @Test
   @DisplayName("Not a winner #1; Winning board expects the same character in " + ""
       + "a single row, column or horizontal.")
@@ -129,6 +170,10 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isWinningMove(2, 0, 'X'));
   }
 
+  /**
+   * Test that the current board configuration is not a winning configuration
+   * (row not complete).
+   */
   @Test
   @DisplayName("Not a winner #2; Winning board expects the same character in " + ""
       + "a single row, column or horizontal.")
@@ -140,6 +185,10 @@ class GameBoardTest {
     assertEquals(false, emptyTestBoard.isWinningMove(1, 2, 'O'));
   }
 
+  /**
+   * Test that the current board configuration is a winning configuration
+   * via the left horizontal.
+   */
   @Test
   @DisplayName("Winner; Left Horizontal Configuration.")
   void testWinnerLeftHorizontal() {
@@ -152,6 +201,10 @@ class GameBoardTest {
     assertEquals(true, emptyTestBoard.isWinningMove(2, 2, 'X'));
   }
 
+  /**
+   * Test that the current board configuration is a winning configuration
+   * via the right horizontal.
+   */
   @Test
   @DisplayName("Winner; Right Horizontal Configuration.")
   void testWinnerRightHorizontal() {
@@ -164,6 +217,10 @@ class GameBoardTest {
     assertEquals(true, emptyTestBoard.isWinningMove(1, 1, 'O'));
   }
 
+  /**
+   * Test that the current board configuration is a winning configuration
+   * via the first column.
+   */
   @Test
   @DisplayName("Winner; Vertical Configuration.")
   void testWinnerRow() {
@@ -176,6 +233,10 @@ class GameBoardTest {
     assertEquals(true, emptyTestBoard.isWinningMove(2, 0, 'X'));
   }
 
+  /**
+   * Test that the current board configuration is a winning configuration
+   * via the top row.
+   */
   @Test
   @DisplayName("Winner; Horizontal Configuration.")
   void testWinnerColumn() {
@@ -188,6 +249,9 @@ class GameBoardTest {
     assertEquals(true, emptyTestBoard.isWinningMove(0, 2, 'X'));
   }
 
+  /**
+   * Test that without any moves played, the gameboard is considered empty.
+   */
   @Test
   @DisplayName("No moves have been played; the game board should be empty.")
   void testBoardEmpty() {
@@ -197,6 +261,9 @@ class GameBoardTest {
     assertEquals(true, testBoard.isEmpty());
   }
 
+  /**
+   * Test that after any moves played, the gameboard is not considered empty.
+   */
   @Test
   @DisplayName("Moves have been played; the game board should not be empty.")
   void testBoardNotEmpty() {
@@ -209,6 +276,10 @@ class GameBoardTest {
     assertEquals(false, testBoard.isEmpty());
   }
 
+  /**
+   * Test that after several moves that do not fully fill the board, 
+   * the gameboard is not considered full.
+   */
   @Test
   @DisplayName("Game board is partially filled so cannot be full.")
   void testNotFullBoard() {
@@ -222,6 +293,10 @@ class GameBoardTest {
     assertEquals(false, testBoard.isFull());
   }
 
+  /**
+   * Test that after all positions on the gameboard are occuppied, 
+   * the board is considered full.
+   */
   @Test
   @DisplayName("Game board is filled; cannot add more moves.")
   void testFullBoard() {
@@ -236,9 +311,13 @@ class GameBoardTest {
     assertEquals(true, testBoard.isFull());
   }
 
+  /**
+   * Test that if the gameboard has no players, and the Move is not assigned to a
+   * player, the move cannot be made due to a missing player violation.
+   */
   @Test()
-  @DisplayName("Gameboard has no players, game has not started and player"
-      + " " + "should not be able to make move.")
+  @DisplayName("Gameboard has no players, game has not started and player "
+      + "should not be able to make move.")
   void preventPlayingMoveIfMissingPlayers() {
 
     Move move = new Move(null, 0, 0);
@@ -248,6 +327,10 @@ class GameBoardTest {
     assertEquals(MessageStatus.MISSING_PLAYER.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that if the gameboard has only 1 player, an attempt to make a move
+   * by that player faults because of a missing player violation.
+   */
   @Test()
   @DisplayName("Gameboard has only 1 player, game has not started and player " + ""
       + "should not be able to make move.")
@@ -264,6 +347,10 @@ class GameBoardTest {
     assertEquals(MessageStatus.MISSING_PLAYER.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that if the gameboard has both players, player 2 cannot 
+   * make the first move.
+   */
   @Test()
   @DisplayName("Player two player should never be the one to make the first move.")
   void testPlayerOneAlwaysPlaysFirst() {
@@ -277,6 +364,9 @@ class GameBoardTest {
     assertEquals(MessageStatus.INVALID_ORDER_OF_PLAY.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that if the gameboard has both players, player 1 can make the first move.
+   */
   @Test()
   @DisplayName("First player is allowed to make the first move.")
   void testPlayerOneAlwaysPlaysFirstOK() {
@@ -290,6 +380,9 @@ class GameBoardTest {
     assertEquals(MessageStatus.SUCCESS.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that a player cannot make a move if it is not their turn.
+   */
   @Test()
   @DisplayName("Player should not be able to make a move if it is not their turn.")
   void playerCannotMakeMoveIfNotTheirTurn() {
@@ -305,6 +398,9 @@ class GameBoardTest {
     assertEquals(MessageStatus.OTHER_PLAYERS_TURN.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that a player cannot make a move at an occupied position.
+   */
   @Test()
   @DisplayName("Player should not be able to make a move the position requested " 
       + "" + "is already occupied.")
@@ -321,6 +417,9 @@ class GameBoardTest {
     assertEquals(MessageStatus.POSITION_NOT_ALLOWED.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that a player cannot make a move at a position that doesn't exist.
+   */
   @Test()
   @DisplayName("Player should not be able to make a move the position on the board " + ""
       + "that doesn't exist.")
@@ -337,8 +436,12 @@ class GameBoardTest {
     assertEquals(MessageStatus.POSITION_NOT_ALLOWED.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that a player cannot make a move if the gameboard is already won (game over).
+   */
   @Test()
-  @DisplayName("Player should not be able to continue playing if other player already won.")
+  @DisplayName("Player should not be able to continue playing if other "
+      + "player already won.")
   void playerCannotMakeMoveIfGameOver() {
 
     // configure game board for test
@@ -352,6 +455,9 @@ class GameBoardTest {
     assertEquals(MessageStatus.GAME_ALREADY_OVER.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that a player is alerted if they make a game-winning move.
+   */
   @Test()
   @DisplayName("Player made winning move; game should report that they have won.")
   void playerMakesWinningMove() {
@@ -366,6 +472,10 @@ class GameBoardTest {
     assertEquals(MessageStatus.GAME_OVER_WINNER.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that a player is alerted if they make the last available move on the
+   * board and there are no winners (i.e., game is a draw).
+   */
   @Test()
   @DisplayName("Player made the last available move on the board, but no one won.")
   void playerMakesMoveForDraw() {
@@ -381,8 +491,13 @@ class GameBoardTest {
     assertEquals(MessageStatus.GAME_OVER_NO_WINNER.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that turns switch between players if no one has won and 
+   * there is no draw yet (player 2 should go next).
+   */
   @Test()
-  @DisplayName("Player made move; no one has won and no draw yet. Player 2 should go next.")
+  @DisplayName("Player made move; no one has won and no draw yet. "
+      + "Player 2 should go next.")
   void turnSwitchesToOtherPlayerIfNoWinner1() {
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 0, 'O', 0 }, { 0, 0, 0 } };
@@ -395,8 +510,13 @@ class GameBoardTest {
     assertEquals(2, activeTestBoard.getTurn());
   }
 
+  /**
+   * Test that turns switch between players if no one has won and there is no draw yet
+   * (player 1 should go next).
+   */
   @Test()
-  @DisplayName("Player made move; no one has won and no draw yet. Player 1 should go next.")
+  @DisplayName("Player made move; no one has won and no draw yet. "
+      + "Player 1 should go next.")
   void turnSwitchesToOtherPlayerIfNoWinner2() {
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
@@ -410,8 +530,11 @@ class GameBoardTest {
     assertEquals(1, activeTestBoard.getTurn());
   }
 
+  /**
+   * Test that it is not possible for player 2 to make the first move.
+   */
   @Test()
-  @DisplayName("Process move where player 2 attempts to join game before game has started.")
+  @DisplayName("Player 2 should not be able to make the first move")
   void playerTwoAttemptsFirstMove() {
     // configure game board for test
     char[][] boardState = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
@@ -423,6 +546,10 @@ class GameBoardTest {
     assertEquals(MessageStatus.INVALID_ORDER_OF_PLAY.getValue(), msg.getCode());
   }
 
+  /**
+   * Test that if Player 1 has aleady selected type X, Player 2 is autoassigned
+   * type O.
+   */
   @Test()
   @DisplayName("If Player 1 is already X, Player 2 should be auto-assigned O.")
   void testAutoSetPlayerP2O() {
@@ -435,6 +562,10 @@ class GameBoardTest {
 
   }
 
+  /**
+   * Test that if Player 1 has aleady selected type O, Player 2 is autoassigned
+   * type X.
+   */
   @Test()
   @DisplayName("If Player 1 is already O, Player 2 should be auto-assigned X.")
   void testAutoSetPlayerP2X() {
@@ -447,6 +578,10 @@ class GameBoardTest {
 
   }
 
+  /**
+   * Test that it is not possible to set a Player 2 with the same type
+   * as Player 1 that is already on the board (X).
+   */
   @Test()
   @DisplayName("If Player 1 is already O, Player 2 cannot be O.")
   void testSetPlayerTwoIllegal() {
@@ -458,6 +593,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set a Player 2 with the same type
+   * as Player 1 that is already on the board (O).
+   */
   @Test()
   @DisplayName("If Player 1 is already O, Player 2 can be O.")
   void testSetPlayerTwoValid() {
@@ -468,6 +607,9 @@ class GameBoardTest {
     assert true;  // we are only checking that no exception is thrown
   }
 
+  /**
+   * Test print out board.
+   */
   @Test()
   @DisplayName("Printing the board shouldn't cause any errors.")
   void testPrintBoarad() {
@@ -479,6 +621,9 @@ class GameBoardTest {
     assert true; // we are only checking that no exception is thrown
   }
 
+  /**
+   * Test that toString() method is a correct reflection of board state.
+   */
   @Test()
   @DisplayName("To string method should be a correct reflection of the board.")
   void testGameBoardToString() {
@@ -493,6 +638,10 @@ class GameBoardTest {
     assertEquals(expectedGameBoard, activeTestBoard.toString());
   }
 
+  /**
+   * Test that it is not possible to set the winner of the game to players other
+   * than Player 1 or Player 2.
+   */
   @Test()
   @DisplayName("The only possible winners of the gameboard are players 1 or 2.")
   void testSetGameWinnerInvalidTooBig() {
@@ -503,6 +652,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set the winner of the game to players other
+   * than Player 1 or Player 2 (negative value passed).
+   */
   @Test()
   @DisplayName("The only possible winners of the gameboard are players 1 or 2.")
   void testSetGameWinnerInvalidNegPlayer() {
@@ -513,6 +666,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is possible to set the winner of the game to 
+   * Player 1 or Player 2.
+   */
   @Test()
   @DisplayName("Setting the player winner as player 1 or 2 is OK.")
   void testSetGameWinnerValid() {
@@ -526,6 +683,10 @@ class GameBoardTest {
     assert true; // we are only checking that no exception is thrown
   }
 
+  /**
+   * Test that a draw is not possible to set until the gameboard 
+   * is actually full.
+   */
   @Test()
   @DisplayName("A draw is not possible until the entire game board is full.")
   void testSetDrawInvalidNotFull() {
@@ -539,6 +700,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set a draw if there is
+   *  already a winner.
+   */
   @Test()
   @DisplayName("A draw is not possible if there is a winner.")
   void testSetDrawInvalidWinner() {
@@ -553,6 +718,9 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that a draw is possible if the gameboard is full.
+   */
   @Test()
   @DisplayName("A draw is possible when the entire game board is full.")
   void testSetDrawValid() {
@@ -564,14 +732,21 @@ class GameBoardTest {
     assert true; // we are only checking that no exception is thrown
   }
 
+  /**
+   * Test that a draw is not possible to set until the gameboard is actually full.
+   */
   @Test()
-  @DisplayName("A draw is possible when the entire game board is full.")
+  @DisplayName("A partially full board cannot be considered a draw.")
   void testGetIsDraw() {
     assertEquals(activeTestBoard.isDraw(), false);
   }
 
+  /**
+   * Test that it is not possible to set a gameboard that is not 3x3 (wrong # rows).
+   */
   @Test()
-  @DisplayName("It is invalid to set the gameboard to have the wrong number of rows.")
+  @DisplayName("It is invalid to set the gameboard to have the "
+      + "wrong number of rows.")
   void testSetGameBoardInvalidRowSize() {
     char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' } };
 
@@ -580,8 +755,12 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set a gameboard that is not 3x3 (wrong # columns).
+   */
   @Test()
-  @DisplayName("It is invalid to set the gameboard to have the wrong number of columns.")
+  @DisplayName("It is invalid to set the gameboard to have the wrong "
+      + "number of columns.")
   void testSetGameBoardInvalidColumnSize() {
     char[][] boardState = { { 'O', 'X' }, { 'X', 'O' }, { 'X', 'O' } };
 
@@ -590,8 +769,13 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set a gameboard that has invalid pieces (i.e., not
+   * just X and Os).
+   */
   @Test()
-  @DisplayName("It is invalid to set the gameboard to invalid pieces (i.e., not X or O).")
+  @DisplayName("It is invalid to set the gameboard to invalid pieces "
+      + "(i.e., not X or O).")
   void testSetGameBoardInvalidTypes() {
     char[][] boardState = { { 'O', 'P', 'O' }, { 'X', 'O', 'K' }, { 'X', 'O', 'X' } };
 
@@ -600,8 +784,13 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set the next turn to a player that is not 
+   * player 1 or player 2 (negative player test).
+   */
   @Test()
-  @DisplayName("It is invalid to set the turn to a player that is not 1 or 2 (-1 definitely not!)")
+  @DisplayName("It is invalid to set the turn to a player that is "
+      + "not 1 or 2 (-1 definitely not!)")
   void testSetTurnNegPlayer() {
 
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
@@ -609,6 +798,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set the next turn to a player that is not 
+   * player 1 or player 2 (player 7 doesn't exist).
+   */
   @Test()
   @DisplayName("It is invalid to set the turn to a player that is not 1 or 2 (7 definitely not!)")
   void testSetTurnInvalidPlayer() {
@@ -618,6 +811,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set the next turn to a player that does
+   * not exist on the gameboard yet (Player 1).
+   */
   @Test()
   @DisplayName("Cannot set the turn to player 1 if they don't exist!")
   void testSetTurnMissingPlayer1() {
@@ -627,6 +824,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set the next turn to a player that does
+   * not exist on the gameboard yet (Player 2).
+   */
   @Test()
   @DisplayName("Cannot set the turn to player 2 if they don't exist!")
   void testSetTurnMissingPlayer2() {
@@ -635,7 +836,11 @@ class GameBoardTest {
       emptyTestBoard.setTurn(2);
     });
   }
-
+  
+  /**
+   * Test that it is not possible to set the game as started if there are no
+   * players on the board.
+   */
   @Test()
   @DisplayName("Cannot set game as started if there are no players on the board")
   void testSetGameStartedMissingPlayers() {
@@ -645,8 +850,12 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is not possible to set the game as started if Player 2 is
+   * missing.
+   */
   @Test()
-  @DisplayName("Cannot set game as started if Player 1 is missing")
+  @DisplayName("Cannot set game as started if Player 2 is missing")
   void testSetGameStartedMissingPlayer1() {
     emptyTestBoard.setP1(player1);
 
@@ -655,6 +864,10 @@ class GameBoardTest {
     });
   }
 
+  /**
+   * Test that it is possible to set the game as started if both
+   * players are present.
+   */
   @Test()
   @DisplayName("It is OK to start the game when both players are present")
   void testSetGameStartedValid() {

@@ -94,8 +94,8 @@ public class TicTacToeController {
     if (gameBoard.getP1() == null) {
       logger.info("Currently there is no game to join (no Player 1 yet). "
           + "Redirecting user to new game. Board State: " + gameBoard);
+      
       ctx.redirect("/newgame");
-      ctx.status(302);  // redirect
       return ctx;
     }
     
@@ -187,7 +187,7 @@ public class TicTacToeController {
       // one of the accepted types, raise custom exception; use default Javalin 400
       // response
       throw new BadRequestResponse("First player should select either " 
-          + "'X' or " + "'O'; cannot accept " + submittedType);
+          + "'X' or " + "'O'; cannot accept '" + submittedType + "'.");
     }
     
     return new Player(submittedType.charAt(0), 1);

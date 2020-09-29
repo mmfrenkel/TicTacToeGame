@@ -13,12 +13,18 @@ public class MoveTest {
   Move move;
   Player player;
   
+  /**
+   * Creates test players and moves to be referred to in tests.
+   */
   @BeforeEach
   void initMove() {
     player = new Player('X', 1);
     move = new Move(player, 1, 2);
   }
   
+  /**
+   * Tests that getPlayer() returns the correct player.
+   */
   @Test
   @DisplayName("Move getPlayer() method should get the correct player.")
   void testGetPlayer() {
@@ -27,6 +33,9 @@ public class MoveTest {
     assertEquals(player, movePlayer);
   }
   
+  /**
+   * Tests that getPlayerId() gets the ID of the correct player.
+   */
   @Test
   @DisplayName("Move getPlayerId() method should get the correct player Id.")
   void testGetPlayerId() {
@@ -35,6 +44,9 @@ public class MoveTest {
     assertEquals(playerId, player.getId());
   }
   
+  /**
+   * Tests that setPlayer() allows a player to be set.
+   */
   @Test
   @DisplayName("Move setPlayer() method should allow Player to be set.")
   void testSetPlayer() {
@@ -44,6 +56,9 @@ public class MoveTest {
     assertEquals(player, move.getPlayer());
   }
   
+  /**
+   * Tests that getMoveX() returns the expected X coordinate of the move.
+   */
   @Test
   @DisplayName("Move getMoveX() should correctly retrieve X coordinate of move.")
   void testGetMoveX() {
@@ -51,6 +66,9 @@ public class MoveTest {
     assertEquals(1, move.getMoveX());
   }
   
+  /**
+   * Tests that getMoveY() returns the expected Y coordinate of the move.
+   */
   @Test
   @DisplayName("Move getMoveY() should correctly retrieve Y coordinate of move.")
   void testGetMoveY() {
@@ -58,6 +76,9 @@ public class MoveTest {
     assertEquals(2, move.getMoveY());
   }
   
+  /**
+   * Tests that getMoveX() returns the expected X coordinate of the move.
+   */
   @Test
   @DisplayName("Move setMoveX() should correctly set X coordinate of move.")
   void testSetMoveX() {
@@ -66,6 +87,9 @@ public class MoveTest {
     assertEquals(2, move.getMoveX());
   }
   
+  /**
+   * Tests that setMoveY() sets the Y coordinate of the move.
+   */
   @Test
   @DisplayName("Move setMoveY() should correctly set Y coordinate of move.")
   void testSetMoveY() {
@@ -74,6 +98,9 @@ public class MoveTest {
     assertEquals(1, move.getMoveY());
   }
   
+  /**
+   * Tests that Move toString() method reflects the state of the Move instance.
+   */
   @Test
   @DisplayName("Move's toString() method should accurate reflect the Move instance.")
   void testToStringMove() {
@@ -82,6 +109,10 @@ public class MoveTest {
     assertEquals(expected, move.toString());
   }
   
+  /**
+   * Test equals() function; a Move instance can never be equal to an instance
+   * of another class.
+   */
   @Test
   @DisplayName("A Move instance can never be equal to a String instance.")
   void testEqualityMovesDifferentClasses() {
@@ -90,6 +121,10 @@ public class MoveTest {
     assertEquals(false, move.equals(s));
   }
   
+  /**
+   * Test equals() function; a Move instance can never be equal to an instance
+   * of Move with a different player.
+   */
   @Test
   @DisplayName("Move instances are not identical if they don't have the same player.")
   void testEqualityMovesDifferentPlayers() {
@@ -98,6 +133,10 @@ public class MoveTest {
     assertEquals(false, move.equals(move2));
   }
   
+  /**
+   * Test equals() function; a Move instance can never be equal to an instance
+   * of Move that doesn't have the same X coordinate.
+   */
   @Test
   @DisplayName("Move instances are not identical if they don't have the same X move.")
   void testEqualityMovesDifferentX() {
@@ -106,6 +145,10 @@ public class MoveTest {
     assertEquals(false, move.equals(move2));
   }
   
+  /**
+   * Test equals() function; a Move instance can never be equal to an instance
+   * of Move that doesn't have the same Y coordinate.
+   */
   @Test
   @DisplayName("Move instances are not identical if they don't have the same Y move.")
   void testEqualityMovesDifferentY() {
@@ -114,6 +157,10 @@ public class MoveTest {
     assertEquals(false, move.equals(move2));
   }
   
+  /**
+   * Test equals() function; a Move instance is equal to another Move instance
+   * if they share all the same fields.
+   */
   @Test
   @DisplayName("Move instances are identical if they share the same fields.")
   void testEqualityMovesEqual() {

@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 
 public class PlayerTest {
   
+  /**
+   * Test that Player constructor is able to set Player ID.
+   */
   @Test
   @DisplayName("Player constructor should be able to assign ID.")
   void testCreatePlayerId() {
@@ -16,6 +19,9 @@ public class PlayerTest {
     assertEquals(1, player.getId());
   }
   
+  /**
+   * Test that Player constructor is able to set Player type.
+   */
   @Test
   @DisplayName("Player constructor should be able to assign type.")
   void testCreatePlayerType() {
@@ -24,6 +30,9 @@ public class PlayerTest {
     assertEquals('X', player.getType());
   }
   
+  /**
+   * Test that setType() allows type to be set for Player.
+   */
   @Test
   @DisplayName("setType() method should allow type to be set.")
   void testSetType() {
@@ -33,6 +42,9 @@ public class PlayerTest {
     assertEquals('O', player.getType());
   }
   
+  /**
+   * Test that setId() allows id to be set for Player.
+   */
   @Test
   @DisplayName("setId() method should allow type to be set.")
   void testSetId() {
@@ -42,6 +54,10 @@ public class PlayerTest {
     assertEquals(2, player.getId());
   }
   
+  /**
+   * Tests equals() method; an instance of Player can never be
+   * equal to an instance of another class.
+   */
   @Test
   @DisplayName("A String object is not a Player.")
   void testPlayerEqualityDifferentTypes() {
@@ -50,6 +66,10 @@ public class PlayerTest {
     assertEquals(false, player.equals(s));
   }
   
+  /**
+   * Tests equals() method; an instance of Player can never be
+   * equal to an instance of Player with a different ID.
+   */
   @Test
   @DisplayName("A Players with different IDs are not the same Player.")
   void testPlayerEqualityDiffernetIds() {
@@ -58,6 +78,10 @@ public class PlayerTest {
     assertEquals(false, player1.equals(player2));
   }
   
+  /**
+   * Tests equals() method; an instance of Player can never be
+   * equal to an instance of Player with a different type.
+   */
   @Test
   @DisplayName("A Players with different types are not the same Player.")
   void testPlayerEqualityDiffernetTypes() {
@@ -66,6 +90,10 @@ public class PlayerTest {
     assertEquals(false, player1.equals(player2));
   }
   
+  /**
+   * Tests equals() method; an instance of Player is equal to another
+   * instance of Player if they share the same ID and type.
+   */
   @Test
   @DisplayName("A Players with the same ID and type are identical.")
   void testPlayerEquality() {

@@ -26,12 +26,21 @@ class TicTacToeControllerTest {
   private Context ctx;
   
   private TicTacToeController tttcontroller;
+  
+  // mock controller needed for tests calling parsePlayerIdFromPathParam() method
   private TicTacToeController mockTttcontroller;
   
   private GameBoard activeGameBoard;
   
   private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
   
+  /**
+   * Allows each test to be run on a fresh instance of the controller. Several
+   * of the tests use the true TicTacToeController instance, others require
+   * a mock of the controller, where a single method is mocked (and the rest
+   * are true to the original controller). To facilitate testing, an instance
+   * of an active gameboard is provided.
+   */
   @BeforeEach
   void refreshTest() {
    
@@ -49,6 +58,9 @@ class TicTacToeControllerTest {
     activeGameBoard = new GameBoard(player1, player2, true, 1, emptyBoard, 0, false);
   }
   
+  /**
+   * Tests that Player 1 can only choose to be of type X or O.
+   */
   @Test()
   @DisplayName("Invalid request; first player can only select 'X' or 'O'.")
   void createPlayerOneInValid() {
@@ -60,6 +72,10 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Tests that Player 1 cannot be added to the game if the request 
+   * does not contain a player type.
+   */
   @Test()
   @DisplayName("Invalid request; the type of player must be submitted")
   void createPlayerOneInValidMissing() {
@@ -71,6 +87,9 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Valid requests to server new game should be successful.
+   */
   @Test()
   @DisplayName("Controller should serve new game for player.")
   void testServeNewGame() {
@@ -78,6 +97,10 @@ class TicTacToeControllerTest {
     verify(ctx).status(200);
   }
   
+  /**
+   * When a new game is served, the gameboard configuration should be
+   * set to empty (totally fresh board).
+   */
   @Test()
   @DisplayName("Controller should serve new game for player with empty board.")
   void testServeNewGameBoard() {
@@ -87,6 +110,10 @@ class TicTacToeControllerTest {
     assertEquals(gb.isEmpty(), true);
   }
   
+  /**
+   * Test that a duplicate request to start a game does not replace
+   * the existing player 1 (should throw a BadRequestResponse).
+   */
   @Test()
   @DisplayName("Cannot start game (add Player 1) if Player 1 already exists.")
   void testStartGamePlayerAlreadyExists() {
@@ -98,6 +125,10 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Test that a duplicate request to join a game does not replace
+   * the existing player 2 (should throw a BadRequestResponse).
+   */
   @Test()
   @DisplayName("Cannot join game (add Player 2) if Player2 already exists.")
   void testJoinGamePlayerAlreadyExists() {
@@ -111,6 +142,10 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Test that Player 2 cannot be added if Player 1 does not yet exist
+   * (should throw a BadRequestResponse).
+   */
   @Test()
   @DisplayName("Cannot join game (add Player 2) if Player1 doesn't exist.")
   void testJoinGamePlayer1DoesntExists() {
@@ -118,6 +153,9 @@ class TicTacToeControllerTest {
     verify(ctx).status(302); 
   }
   
+  /**
+   * Test that Player 2 can join the game if Player 1 does exist already.
+   */
   @Test()
   @DisplayName("Player 2 should be able to join the game if Player 1 exists.")
   void testJoinGamePlayer1Exists() {
@@ -128,6 +166,9 @@ class TicTacToeControllerTest {
     verify(ctx).status(200); 
   }
   
+  /**
+   * Valid requests to start a game by Player 1 should be successful.
+   */
   @Test()
   @DisplayName("Valid request to create first player.")
   void createPlayerOneValid() {
@@ -138,6 +179,11 @@ class TicTacToeControllerTest {
     verify(ctx).status(200);
   }
   
+  /**
+   * Test that gameboard conversion to JSON produces to expected format;
+   * this should include only the fields specified to be serialized by GSON.
+   * This test is for an empty gameboard.
+   */
   @Test()
   @DisplayName("Gameboard conversion to JSON failed to produce expected format.")
   void convertGameBoardToJsonEmpty() {
@@ -154,7 +200,11 @@ class TicTacToeControllerTest {
     assertEquals(parser.parse(expectedBoardAsJson), parser.parse(boardAsJson));
   }
   
-  
+  /**
+   * Test that gameboard conversion to JSON produces to expected format;
+   * this should include only the fields specified to be serialized by GSON.
+   * This test includes a gameboard with Player 1.
+   */
   @Test()
   @DisplayName("Gameboard conversion to JSON failed to produce expected format.")
   void convertGameBoardToJsonPlayer1() {
@@ -174,6 +224,9 @@ class TicTacToeControllerTest {
     assertEquals(parser.parse(expectedBoardAsJson), parser.parse(boardAsJson));
   }
   
+  /**
+   * Test that a move is not successful if the playerID is missing from the formParams.
+   */
   @Test()
   @DisplayName("Move should not be successful if playerId is missing from formParams "
       + "on request for processing player move")
@@ -188,6 +241,9 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Test that a move is not successful if the playerID submitted is not valid.
+   */
   @Test()
   @DisplayName("Move should not be successful if playerId is not valid "
       + "on request for processing player move")
@@ -202,6 +258,10 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Test that a move is not successful if the X coordinate of the move is
+   * missing.
+   */
   @Test()
   @DisplayName("Move should not be successful if the x coordinate of the"
       + "move is missing")
@@ -219,6 +279,10 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Test that a move is not successful if the Y coordinate of the move is
+   * missing.
+   */
   @Test()
   @DisplayName("Move should not be successful if the y coordinate of the"
       + "move is missing")
@@ -236,6 +300,10 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Test that a move is not successful if either the X or Y 
+   * coordinates of the move are not valid integers.
+   */
   @Test()
   @DisplayName("Move should not be successful if user provides something "
       + "non-numberic as the coordinate of x or y")
@@ -253,6 +321,10 @@ class TicTacToeControllerTest {
     });
   }
   
+  /**
+   * Test that a Move instance is successfully created if the player
+   * 1 and X/Y coordinates of the requested move are valid.
+   */
   @Test()
   @DisplayName("If valid playerId and coordinates are specified, the"
       + "Move instance should be successfully created")
@@ -271,6 +343,10 @@ class TicTacToeControllerTest {
     assertEquals(expectedMove, move);
   }
   
+  /**
+   * Test that a request successfully processed if the player 1 and X/Y
+   * coordinates of the requested move are valid.
+   */
   @Test()
   @DisplayName("If valid playerId and coordinates are specified, the"
       + "player's move should be successfully processed")
