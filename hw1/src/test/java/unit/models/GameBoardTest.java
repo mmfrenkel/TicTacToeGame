@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-
 class GameBoardTest {
 
   private GameBoard emptyTestBoard;
@@ -50,7 +49,7 @@ class GameBoardTest {
     Move attemptedMove = new Move(player1, 0, 1);
     assertEquals(true, emptyTestBoard.isValidMove(attemptedMove));
   }
-  
+
   @Test
   @DisplayName("Moves are not allowed in positions off game board (row doesn't exist #1).")
   void testIsValidMoveFalseRowOffBoard1() {
@@ -61,7 +60,7 @@ class GameBoardTest {
     Move attemptedMove = new Move(player1, 3, 0);
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
-  
+
   @Test
   @DisplayName("Moves are not allowed in positions off game board (row doesn't exist #2).")
   void testIsValidMoveFalseRowOffBoard2() {
@@ -72,7 +71,7 @@ class GameBoardTest {
     Move attemptedMove = new Move(player1, -1, 0);
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
-  
+
   @Test
   @DisplayName("Moves are not allowed in positions off game board (column doesn't exist #1).")
   void testIsValidMoveFalseColumnOffBoard1() {
@@ -83,7 +82,7 @@ class GameBoardTest {
     Move attemptedMove = new Move(player1, 1, 5);
     assertEquals(false, emptyTestBoard.isValidMove(attemptedMove));
   }
-  
+
   @Test
   @DisplayName("Moves are not allowed in positions off game board (column doesn't exist #1).")
   void testIsValidMoveFalseColumnOffBoard2() {
@@ -120,8 +119,8 @@ class GameBoardTest {
   }
 
   @Test
-  @DisplayName("Not a winner #1; Winning board expects the same character in "
-      + "" + "a single row, column or horizontal.")
+  @DisplayName("Not a winner #1; Winning board expects the same character in " + ""
+      + "a single row, column or horizontal.")
   void testNotWinner1() {
     char[][] boardState = { { 0, 'X', 0 }, { 0, 'O', 0 }, { 'X', 0, 0 } };
 
@@ -129,10 +128,10 @@ class GameBoardTest {
 
     assertEquals(false, emptyTestBoard.isWinningMove(2, 0, 'X'));
   }
-  
+
   @Test
-  @DisplayName("Not a winner #2; Winning board expects the same character in "
-      + "" + "a single row, column or horizontal.")
+  @DisplayName("Not a winner #2; Winning board expects the same character in " + ""
+      + "a single row, column or horizontal.")
   void testNotWinner2() {
     char[][] boardState = { { 0, 'X', 'X' }, { 0, 'O', 'O' }, { 0, 0, 0 } };
 
@@ -250,8 +249,8 @@ class GameBoardTest {
   }
 
   @Test()
-  @DisplayName("Gameboard has only 1 player, game has not started and player "
-      + "" + "should not be able to make move.")
+  @DisplayName("Gameboard has only 1 player, game has not started and player " + ""
+      + "should not be able to make move.")
   void preventPlayingMoveIfMissingPlayer() {
 
     // configure game board for test
@@ -277,7 +276,7 @@ class GameBoardTest {
 
     assertEquals(MessageStatus.INVALID_ORDER_OF_PLAY.getValue(), msg.getCode());
   }
-  
+
   @Test()
   @DisplayName("First player is allowed to make the first move.")
   void testPlayerOneAlwaysPlaysFirstOK() {
@@ -307,7 +306,7 @@ class GameBoardTest {
   }
 
   @Test()
-  @DisplayName("Player should not be able to make a move the position requested "
+  @DisplayName("Player should not be able to make a move the position requested " 
       + "" + "is already occupied.")
   void playerCannotMakeMoveToOccupiedPosition() {
 
@@ -323,8 +322,8 @@ class GameBoardTest {
   }
 
   @Test()
-  @DisplayName("Player should not be able to make a move the position on the board "
-      + "" + "that doesn't exist.")
+  @DisplayName("Player should not be able to make a move the position on the board " + ""
+      + "that doesn't exist.")
   void playerCannotMakeMoveToNonexistentPosition() {
 
     // configure game board for test
@@ -393,9 +392,9 @@ class GameBoardTest {
     Message msg = activeTestBoard.processPlayerMove(move);
 
     assertEquals(MessageStatus.SUCCESS.getValue(), msg.getCode());
-    assertEquals(activeTestBoard.getTurn(), 2);
+    assertEquals(2, activeTestBoard.getTurn());
   }
-  
+
   @Test()
   @DisplayName("Player made move; no one has won and no draw yet. Player 1 should go next.")
   void turnSwitchesToOtherPlayerIfNoWinner2() {
@@ -408,7 +407,7 @@ class GameBoardTest {
     Message msg = activeTestBoard.processPlayerMove(move);
 
     assertEquals(MessageStatus.SUCCESS.getValue(), msg.getCode());
-    assertEquals(activeTestBoard.getTurn(), 1);
+    assertEquals(1, activeTestBoard.getTurn());
   }
 
   @Test()
@@ -432,7 +431,7 @@ class GameBoardTest {
 
     emptyTestBoard.autoSetP2();
 
-    assertEquals(emptyTestBoard.getP2().getType(), 'O');
+    assertEquals('O', emptyTestBoard.getP2().getType());
 
   }
 
@@ -444,7 +443,7 @@ class GameBoardTest {
 
     emptyTestBoard.autoSetP2();
 
-    assertEquals(emptyTestBoard.getP2().getType(), 'X');
+    assertEquals('X', emptyTestBoard.getP2().getType());
 
   }
 
@@ -464,11 +463,9 @@ class GameBoardTest {
   void testSetPlayerTwoValid() {
 
     this.emptyTestBoard.setP1(player1); // testing auto-assignment of move type
-
-    // we just want to know this DOESN'T throw any exceptions
     emptyTestBoard.setP2(new Player('O', 1));
 
-    assert true;
+    assert true;  // we are only checking that no exception is thrown
   }
 
   @Test()
@@ -493,171 +490,171 @@ class GameBoardTest {
         + "p2=Player [type=O, id=2], gameStarted=true, turn=1, "
         + "boardState=[[O, X, O], [X, O, X], [X,  , X]], winner=0, isDraw=false]";
 
-    assertEquals(activeTestBoard.toString(), expectedGameBoard);
+    assertEquals(expectedGameBoard, activeTestBoard.toString());
   }
-  
+
   @Test()
   @DisplayName("The only possible winners of the gameboard are players 1 or 2.")
   void testSetGameWinnerInvalidTooBig() {
-    
+
     // you cannot assign player 7 as the winner
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setWinner(7);
     });
   }
-  
+
   @Test()
   @DisplayName("The only possible winners of the gameboard are players 1 or 2.")
   void testSetGameWinnerInvalidNegPlayer() {
-    
+
     // you cannot assign player -1 as the winner
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setWinner(-1);
     });
   }
-  
+
   @Test()
   @DisplayName("Setting the player winner as player 1 or 2 is OK.")
   void testSetGameWinnerValid() {
-    
+
     char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' }, { 'X', 0, 'X' } };
     activeTestBoard.setBoardState(boardState);
-    
+
     // you cannot assign player 7 as the winner
     activeTestBoard.setWinner(1);
 
     assert true; // we are only checking that no exception is thrown
   }
-  
+
   @Test()
   @DisplayName("A draw is not possible until the entire game board is full.")
   void testSetDrawInvalidNotFull() {
-    
+
     char[][] boardState = { { 0, 'X', 'O' }, { 'X', 'O', 'X' }, { 'X', 0, 'X' } };
     activeTestBoard.setBoardState(boardState);
-    
+
     // you cannot set the draw until the the board is full
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setDraw(true);
     });
   }
-  
+
   @Test()
   @DisplayName("A draw is not possible if there is a winner.")
   void testSetDrawInvalidWinner() {
-    
+
     char[][] boardState = { { 'X', 'X', 'O' }, { 'X', 'O', 'O' }, { 'X', 0, 'O' } };
     activeTestBoard.setBoardState(boardState);
     activeTestBoard.setWinner(1);
-    
+
     // you cannot set the draw if there is already a winner on the board
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setDraw(true);
     });
   }
-  
+
   @Test()
   @DisplayName("A draw is possible when the entire game board is full.")
   void testSetDrawValid() {
-    
+
     char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' }, { 'X', 'O', 'X' } };
     activeTestBoard.setBoardState(boardState);
-    
+
     activeTestBoard.setDraw(true);
     assert true; // we are only checking that no exception is thrown
   }
-  
+
   @Test()
   @DisplayName("A draw is possible when the entire game board is full.")
   void testGetIsDraw() {
     assertEquals(activeTestBoard.isDraw(), false);
   }
-  
+
   @Test()
   @DisplayName("It is invalid to set the gameboard to have the wrong number of rows.")
   void testSetGameBoardInvalidRowSize() {
     char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' } };
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setBoardState(boardState);
     });
   }
-  
+
   @Test()
   @DisplayName("It is invalid to set the gameboard to have the wrong number of columns.")
   void testSetGameBoardInvalidColumnSize() {
     char[][] boardState = { { 'O', 'X' }, { 'X', 'O' }, { 'X', 'O' } };
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setBoardState(boardState);
     });
   }
-  
+
   @Test()
   @DisplayName("It is invalid to set the gameboard to invalid pieces (i.e., not X or O).")
   void testSetGameBoardInvalidTypes() {
     char[][] boardState = { { 'O', 'P', 'O' }, { 'X', 'O', 'K' }, { 'X', 'O', 'X' } };
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setBoardState(boardState);
     });
   }
-  
+
   @Test()
   @DisplayName("It is invalid to set the turn to a player that is not 1 or 2 (-1 definitely not!)")
   void testSetTurnNegPlayer() {
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setTurn(-1);
     });
   }
-  
+
   @Test()
   @DisplayName("It is invalid to set the turn to a player that is not 1 or 2 (7 definitely not!)")
   void testSetTurnInvalidPlayer() {
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       activeTestBoard.setTurn(7);
     });
   }
-  
+
   @Test()
   @DisplayName("Cannot set the turn to player 1 if they don't exist!")
   void testSetTurnMissingPlayer1() {
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       emptyTestBoard.setTurn(1);
     });
   }
-  
+
   @Test()
   @DisplayName("Cannot set the turn to player 2 if they don't exist!")
   void testSetTurnMissingPlayer2() {
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       emptyTestBoard.setTurn(2);
     });
   }
-  
+
   @Test()
   @DisplayName("Cannot set game as started if there are no players on the board")
   void testSetGameStartedMissingPlayers() {
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       emptyTestBoard.setGameStarted(true);
     });
   }
-  
+
   @Test()
   @DisplayName("Cannot set game as started if Player 1 is missing")
   void testSetGameStartedMissingPlayer1() {
     emptyTestBoard.setP1(player1);
-    
+
     Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
       emptyTestBoard.setGameStarted(true);
     });
   }
-  
+
   @Test()
   @DisplayName("It is OK to start the game when both players are present")
   void testSetGameStartedValid() {

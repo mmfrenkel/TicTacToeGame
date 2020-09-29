@@ -6,6 +6,7 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import models.GameBoard;
 import models.Message;
+import models.MessageStatus;
 import models.Move;
 import models.Player;
 import org.slf4j.Logger;
@@ -124,9 +125,14 @@ public class TicTacToeController {
     
     logger.info("Outcome of processed move: " + message);
     ctx.result(gson.toJson(message));
-    
-    System.out.println(gson.toJson(message));
-    ctx.status(200);
+
+    if (message.getCode() == MessageStatus.SUCCESS.getValue()
+        || message.getCode() == MessageStatus.GAME_OVER_WINNER.getValue()
+        || message.getCode() == MessageStatus.GAME_OVER_NO_WINNER.getValue()) {
+      ctx.status(200);
+    } else {
+      ctx.status(400);
+    }
     return ctx;
   }
   

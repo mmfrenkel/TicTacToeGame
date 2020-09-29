@@ -5,15 +5,15 @@ import com.google.gson.annotations.Expose;
 public class Player {
 
   /* -- @Expose to tell gson to add below fields to json returned to user -- */
- 
+
   @Expose
   private char type;
-  
+
   @Expose
   private int id;
-  
+
   /* -- end fields to serialize here -- */
-  
+
   /**
    * Constructor for Player class.
    * 
@@ -60,17 +60,17 @@ public class Player {
   public void setId(int id) {
     this.id = id;
   }
-  
+
   @Override
   public boolean equals(Object o) {
-    
+
     if (!(o instanceof Player)) {
       return false;
     }
     Player compared = (Player) o;
     return compared.getType() == this.getType() && compared.getId() == this.getId();
   }
-  
+
   @Override
   public String toString() {
     return "Player [type=" + type + ", id=" + id + "]";

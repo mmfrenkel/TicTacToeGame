@@ -145,7 +145,7 @@ public class GameBoard {
       // 4. If the submitted move is not available, cannot make move
       message = new Message(false, MessageStatus.POSITION_NOT_ALLOWED, 
           "You cannot make a move at (" + move.getMoveX() + ", " + move.getMoveY() + "). "
-              + "Please choose an unoccupied position on the game board!");
+              + "Please choose an unoccupied and valid position on the game board!");
       
     } else if (getWinner() != 0) {
       // 5. If the board was already won, then cannot make another move

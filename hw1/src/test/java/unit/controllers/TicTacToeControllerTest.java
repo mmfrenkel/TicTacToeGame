@@ -268,7 +268,7 @@ class TicTacToeControllerTest {
     Move expectedMove = new Move(new Player('X', 1), 1, 2);
     
     // assert multiple times in this case, to avoid 
-    assertEquals(move, expectedMove);
+    assertEquals(expectedMove, move);
   }
   
   @Test()

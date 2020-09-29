@@ -2,18 +2,17 @@ package controllers;
 
 import io.javalin.Javalin;
 import java.io.IOException;
-import java.util.Queue; 
+import java.util.Queue;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-class PlayGame {
+public class PlayGame {
 
   private static final int PORT_NUMBER = 8080;
 
   private static Javalin app;
-  
+
   private static Logger logger = LoggerFactory.getLogger(PlayGame.class);
 
   /**
@@ -39,25 +38,33 @@ class PlayGame {
       logger.info("Received request to start a new game. This will reset the game board.");
       tttcontroller.serveNewGame(ctx);
     });
-    
+
     app.post("/startgame", ctx -> {
       logger.info("Received request to add a first player.");
       tttcontroller.startGame(ctx);
     });
-    
-    // Warning: Often takes a long time for the web page for Player 2 to fully resolve itself
-    // and show that Player 1 has the first move
+
+    // Warning: Often takes a long time for the web page for Player 2 to fully
+    // resolve itself and show that Player 1 has the first move
     app.get("/joingame", ctx -> {
       logger.info("Received request to add a second player.");
       tttcontroller.addSecondPlayer(ctx);
       sendGameBoardToAllPlayers(tttcontroller.getGameBoardAsJson());
     });
-    
+
     app.post("/move/:playerId", ctx -> {
       tttcontroller.processPlayerMove(ctx);
       sendGameBoardToAllPlayers(tttcontroller.getGameBoardAsJson());
     });
     
+    app.get("/gameboardstatus", ctx -> {
+      ctx.result(tttcontroller.getGameBoardAsJson());
+    });
+    
+    app.get("/test", ctx -> {
+      ctx.status(200);
+    });
+
     // Web sockets - DO NOT DELETE or CHANGE
     app.ws("/gameboard", new UiWebSocket());
   }
