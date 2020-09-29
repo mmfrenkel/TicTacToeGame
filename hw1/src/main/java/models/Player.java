@@ -1,6 +1,7 @@
 package models;
 
 import com.google.gson.annotations.Expose;
+import java.util.Objects;
 
 public class Player {
 
@@ -61,6 +62,9 @@ public class Player {
     this.id = id;
   }
 
+  /**
+   * Allows equality to be tested among Player instances.
+   */
   @Override
   public boolean equals(Object o) {
 
@@ -71,8 +75,19 @@ public class Player {
     return compared.getType() == this.getType() && compared.getId() == this.getId();
   }
 
+  /**
+   * Converts the Player object into a corresponding string containing it state.
+   */
   @Override
   public String toString() {
     return "Player [type=" + type + ", id=" + id + "]";
+  }
+  
+  /**
+   * Required to override equal testing for Player objects.
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, id);
   }
 }

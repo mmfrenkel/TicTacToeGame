@@ -46,10 +46,10 @@ The project includes the following endpoints, which can be utilized for testing 
   "isDraw": false
 }
 ```
-If player 1 already exists on the gameboard then the user is notified that they need to go to either `/joingame`, ask Player 1 for the join url, or start a new game `/newgame`. 
+If player 1 already exists on the gameboard then the user is notified that they need to go to either `/joingame`, ask Player 1 for the join url, or start a new game `/newgame`.
 
 * `GET /joingame`: Allows player 2 to join the gameboard, assigns whatever piece player 1 did not take, and redirects player 2 to their game board. This offically allows the game to commence, as the updated gameboard configuration is broadcast to both users. If there are already 2 players on the board, the user will be notified that the game board is full and they should visit `/newgame` to start a new game.
-* `POST /move/:playerId`: Allows a player specified by their `playerId` to make a move on the gameboard, where the move itself is specified in the following format:`x=0&y=0`, where this specifies a move to (0, 0). Once the player has made a move, erronous moves are reported back to the user and updates to the gameboard configuration are broadcast to both users. 
+* `POST /move/:playerId`: Allows a player specified by their `playerId` to make a move on the gameboard, where the move itself is specified in the following format:`x=0&y=0`, where this specifies a move to (0, 0). Once the player has made a move, erronous moves are reported back to the user and updates to the gameboard configuration are broadcast to both users.
 
 ## Development
 
@@ -57,17 +57,19 @@ This project was developed on macOS Catalina (Version 10.15.6) with IDE support 
 
 To run this project, there is no need to install a server; it is easiest to run the program simply by right-clicking on the `PlayGame.java` file in Eclipse and running it as a Java application.
 
-There is a test suite built for this project, which can by issuing the following command in the command line (or by using the Eclipse UI):
+There is a test suite built for this project, which includes both Junit unit tests and Unirest-Java API integration tests. Both sets of tests can be run in series by issuing the following command in the command line (or by using the Eclipse UI):
 ```
 $ mvn test
 ```
+All tests (currently 121 total, 103 unit tests and 18 integration tests) should pass. Code testing coverage was checked using the Emma plugin in Eclipse and was calculated as 97%. The remaining 3% is (a) code that is either (1) unreachable (not possible to test) or (b) template code and/or previously implemented code as part of this assignment (i.e., web socket code).
 
-This project uses Checkstyle as a tool for ensuring that this code adheres to industry coding standards. Run the checkstyle tool by issuing the command below and reviewing the output found at `target/site/images/checkstyle.html`.
+This project uses Checkstyle as a tool for ensuring that this code adheres to industry coding standards. Run the checkstyle tool by issuing the command below and reviewing the output found within `target/site/images/checkstyle.html`.
 ```
 $ mvn checkstyle:checkstyle
 ```
+Finally, this tool uses the SpotBugs plugin in Eclipse to identify any instances in this code base that have bug patterns. "Spot bugs" detected were resolved only in the main source code; warnings flagged in the test directory were ignored.
 
 ## Credits
 
-The conceptualization and starter code for this project, including all of the HTML, CSS and JS code as well as code for web socket interaction and model/controller templates, were provided by Shirish Singh and Professor Gail Kaiser as part of the Fall 2020 Advanced Software Engineering course at Columbia University (COMS 4156). 
+The conceptualization and starter code for this project, including all of the HTML, CSS and JS code as well as code for web socket interaction and model/controller templates, were provided by Shirish Singh and Professor Gail Kaiser as part of the Fall 2020 Advanced Software Engineering course at Columbia University (COMS 4156).
 

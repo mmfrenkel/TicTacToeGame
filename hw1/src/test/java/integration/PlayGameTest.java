@@ -55,7 +55,8 @@ public class PlayGameTest {
 
   /**
    * This is a test case to evaluate the newgame endpoint; assuming the endpoint
-   * is available, it should always return 200.
+   * is available, it should always return 200. It should reset the
+   * gameboard; it should be empty.
    */
   @Test
   @Order(1)
@@ -65,14 +66,26 @@ public class PlayGameTest {
     HttpResponse<String> response = Unirest
         .get("http://localhost:8080/newgame")
         .asString();
+
+    assertEquals(200, response.getStatus());
     
-    int restStatus = response.getStatus();
+    // ------------- Check the status of the GameBoard ------------- 
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
 
-    // Make sure that the response to the user is successful
-    assertEquals(restStatus, 200);
-    System.out.println(response.getBody());
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    // There shouldn't be a player 1 or 2
+    assertNull(gameBoard.getP1());
+    assertNull(gameBoard.getP2());
+
+    // Check that game has not started
+    assertEquals(false, gameBoard.isGameStarted());
   }
-
+  
   /**
    * Test case when a user attempts to start a new game with an invalid player
    * type. A user should receive a response that this is an invalid game board
@@ -566,6 +579,41 @@ public class PlayGameTest {
 
     // check to make sure there is a draw
     assertEquals(true, gameBoard.isDraw());
+  }
+  
+  /**
+   * If a user goes to '/' instead of '/newgame', the get redirect successfully
+   * without error to /newgame, and the gameboard should be cleared.
+   */
+  @Test
+  @Order(18)
+  @DisplayName("If someone goes to / instead of /newgame, redirect "
+      + "without error to /newgame.")
+  public void newGameTestRedirectNewGame() {
+
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    // Make sure that the response to the user is successful
+    assertEquals(200, response.getStatus());
+    
+    // ------------- Check the status of the GameBoard ------------- 
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the gameboard; since we redirected to /newgame, it should be 
+    // totally empty
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    // There shouldn't be a player 1 or 2
+    assertNull(gameBoard.getP1());
+    assertNull(gameBoard.getP2());
+
+    // Check that game has not started
+    assertEquals(false, gameBoard.isGameStarted());
   }
 
   /**

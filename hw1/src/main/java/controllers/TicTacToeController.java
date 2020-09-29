@@ -96,6 +96,7 @@ public class TicTacToeController {
           + "Redirecting user to new game. Board State: " + gameBoard);
       
       ctx.redirect("/newgame");
+      ctx.status(302);
       return ctx;
     }
     

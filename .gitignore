@@ -28,3 +28,7 @@ hs_err_pid*
 
 # produced my mac OS
 .DS_Store
+
+# produced by Eclipse & associated plugins
+.checkstyle
+

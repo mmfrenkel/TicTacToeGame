@@ -101,4 +101,16 @@ public class PlayerTest {
     Player player2 = new Player('X', 1);
     assertEquals(true, player1.equals(player2));
   }
+  
+  /**
+   * Tests to make sure that hashCode() calculation works.
+   */
+  @Test
+  @DisplayName("Since tests for equality are specified for Player, test"
+      + " objecthash() should pass.")
+  void testObjectHash() {
+    Player player1 = new Player('X', 1);
+    Player player2 = new Player('X', 1);
+    assertEquals(player1.hashCode(), player2.hashCode());
+  }
 }

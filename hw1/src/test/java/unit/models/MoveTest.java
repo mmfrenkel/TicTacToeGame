@@ -168,4 +168,16 @@ public class MoveTest {
     Move move2 = new Move(new Player('X', 1), 1, 2);
     assertEquals(true, move.equals(move2));
   }
+  
+  /**
+   * Tests to make sure that hashCode() calculation works.
+   */
+  @Test
+  @DisplayName("Since tests for equality are specified for Move, test"
+      + " objecthash() should pass.")
+  void testObjectHash() {
+    Move move1 = new Move(new Player('X', 1), 1, 2);
+    Move move2 = new Move(new Player('X', 1), 1, 2);
+    assertEquals(move1.hashCode(), move2.hashCode());
+  }
 }

@@ -1,5 +1,7 @@
 package models;
 
+import java.util.Objects;
+
 public class Move {
 
   private Player player;
@@ -84,11 +86,17 @@ public class Move {
     this.moveY = moveY;
   }
 
+  /**
+   * Converts the Move object into a corresponding string containing it state.
+   */
   @Override
   public String toString() {
     return "Move [player=" + player + ", moveX=" + moveX + ", moveY=" + moveY + "]";
   }
 
+  /**
+   * Allows equality to be tested among Move instances.
+   */
   @Override
   public boolean equals(Object o) {
 
@@ -99,6 +107,14 @@ public class Move {
     return compared.getPlayer().equals(this.getPlayer()) 
         && compared.getMoveX() == this.getMoveX()
         && compared.getMoveY() == this.getMoveY();
+  }
+  
+  /**
+   * Required to override equal testing for Move objects.
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hash(player, moveX, moveY);
   }
 
 }
