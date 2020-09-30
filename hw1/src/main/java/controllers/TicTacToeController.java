@@ -36,8 +36,8 @@ public class TicTacToeController {
     logger.info("Received request to start a new game!");
     
     setGameBoard(new GameBoard()); // used to reset gameBoard when necessary
+    ctx.status(200);               // redirect
     ctx.redirect("/tictactoe.html");
-    ctx.status(200);
     return ctx;
   }
 
