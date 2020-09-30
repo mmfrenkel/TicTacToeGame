@@ -2,7 +2,6 @@ package unit.controllers;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 class TicTacToeControllerTest {
 
@@ -49,7 +49,8 @@ class TicTacToeControllerTest {
     // there is only one method we need to mock, so the rest of them 
     // can be real by default for the TicTacToeController class
     tttcontroller = new TicTacToeController();
-    mockTttcontroller = mock(TicTacToeController.class, CALLS_REAL_METHODS);
+    
+    mockTttcontroller = Mockito.spy(new TicTacToeController());
     
     // a sample gameboard to faciliate in setting the status of the game
     char[][] emptyBoard = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
@@ -233,7 +234,7 @@ class TicTacToeControllerTest {
   void testProcessPlayerMoveInvalidPlayerIdMissing() {
    
     mockTttcontroller.setGameBoard(activeGameBoard);
-    when(mockTttcontroller.parsePlayerIdFromPathParam(ctx)).thenReturn(null);
+    Mockito.doReturn(null).when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
     
     // each move is expected to have a playerId
     Assertions.assertThrows(BadRequestResponse.class, () -> {
@@ -250,7 +251,7 @@ class TicTacToeControllerTest {
   void testProcessPlayerMoveInvalidMissing() {
     
     mockTttcontroller.setGameBoard(activeGameBoard);
-    when(mockTttcontroller.parsePlayerIdFromPathParam(ctx)).thenReturn("7");
+    Mockito.doReturn("7").when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
 
     // each move is expected to have a valid player id (i.e., 1 or 2)
     Assertions.assertThrows(BadRequestResponse.class, () -> {
@@ -268,7 +269,7 @@ class TicTacToeControllerTest {
   void testProcessPlayerMissingMoveX() {
     
     mockTttcontroller.setGameBoard(activeGameBoard);
-    when(mockTttcontroller.parsePlayerIdFromPathParam(ctx)).thenReturn("1");
+    Mockito.doReturn("1").when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
 
     when(ctx.formParam("x")).thenReturn(null);
     when(ctx.formParam("y")).thenReturn("1");
@@ -289,7 +290,8 @@ class TicTacToeControllerTest {
   void testProcessPlayerMissingMoveY() {
     
     mockTttcontroller.setGameBoard(activeGameBoard);
-    when(mockTttcontroller.parsePlayerIdFromPathParam(ctx)).thenReturn("2");
+    
+    Mockito.doReturn("2").when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
 
     when(ctx.formParam("x")).thenReturn("1");
     when(ctx.formParam("y")).thenReturn(null);
@@ -310,7 +312,7 @@ class TicTacToeControllerTest {
   void testProcessPlayerInvalidCoordinate() {
     
     mockTttcontroller.setGameBoard(activeGameBoard);
-    when(mockTttcontroller.parsePlayerIdFromPathParam(ctx)).thenReturn("2");
+    Mockito.doReturn("2").when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
    
     when(ctx.formParam("x")).thenReturn("1");
     when(ctx.formParam("y")).thenReturn("apples");
@@ -331,7 +333,7 @@ class TicTacToeControllerTest {
   void testParseMoveFromRequestValid() {
     
     mockTttcontroller.setGameBoard(activeGameBoard);
-    when(mockTttcontroller.parsePlayerIdFromPathParam(ctx)).thenReturn("1");
+    Mockito.doReturn("1").when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
     
     when(ctx.formParam("x")).thenReturn("1");
     when(ctx.formParam("y")).thenReturn("2");
@@ -353,7 +355,7 @@ class TicTacToeControllerTest {
   void testProcessPlayerValid() {
     
     mockTttcontroller.setGameBoard(activeGameBoard);
-    when(mockTttcontroller.parsePlayerIdFromPathParam(ctx)).thenReturn("1");
+    Mockito.doReturn("1").when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
     
     when(ctx.formParam("x")).thenReturn("1");
     when(ctx.formParam("y")).thenReturn("2");
