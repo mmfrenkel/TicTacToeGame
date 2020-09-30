@@ -32,9 +32,9 @@ public class GameBoard {
   /* -- end fields to serialize to JSON from object here -- */
 
   // a standard tic-tac-toe board has 3 rows and 3 columns  
-  private final int columns = 3;
+  private static final int columns = 3;
 
-  private final int rows = 3;
+  private static final int rows = 3;
   
   // the accepted player types for this board
   private final List<Character> acceptedTypes = Arrays.asList('X', 'O');
@@ -75,9 +75,9 @@ public class GameBoard {
     this.p2 = p2;
     this.gameStarted = gameStarted;
     this.turn = turn;
-    this.boardState = state;
     this.winner = winner;
     this.isDraw = isDraw;
+    setBoardState(state);
   }
   
   /**
@@ -443,29 +443,36 @@ public class GameBoard {
   }
   
   /**
-   * Returns the state of the board.
+   * Returns the state of the board, as a new copy.
    * 
    * @return A two-dimensional array of characters representing board state
    */
   public char[][] getBoardState() {
-    return boardState;
+    char[][] boardCopy = new char[rows][columns];
+    
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < columns; j++) {
+        boardCopy[i][j] = this.boardState[i][j];
+      }
+    }
+    return boardCopy;
   }
   
   /**
    * Sets the board state; must be 2D array of correct size and containing only
    * the correct possible piece types (0 (null), X or O).
    * 
-   * @param boardState 2D array containing current configuration of board
+   * @param newBoardState 2D array containing current configuration of board
    * @throws InvalidGameBoardConfigurationException if board submitted is invalid
    */
-  public void setBoardState(char[][] boardState) {
+  public void setBoardState(char[][] newBoardState) {
   
-    if (boardState.length != rows || boardState[0].length != columns) {
+    if (newBoardState.length != rows || newBoardState[0].length != columns) {
       throw new InvalidGameBoardConfigurationException("Board must be " 
           + rows + "x" + columns + " in size.");
     }
     
-    for (char[] row : boardState) {
+    for (char[] row : newBoardState) {
       for (char move : row) {
         if (move != 0 && !acceptedTypes().contains(move)) {
           throw new InvalidGameBoardConfigurationException("Board submitted contained "
@@ -473,7 +480,16 @@ public class GameBoard {
         }
       }
     }
-    this.boardState = boardState;
+    
+    // make a copy of the submitted board state
+    char[][] boardCopy = new char[rows][columns];
+    
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < columns; j++) {
+        boardCopy[i][j] = newBoardState[i][j];
+      }
+    }
+    this.boardState = boardCopy;
   }
   
   /**
