@@ -6,7 +6,6 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import models.GameBoard;
 import models.Message;
-import models.MessageStatus;
 import models.Move;
 import models.Player;
 import org.slf4j.Logger;
@@ -95,8 +94,8 @@ public class TicTacToeController {
       logger.info("Currently there is no game to join (no Player 1 yet). "
           + "Redirecting user to new game. Board State: " + gameBoard);
       
-      ctx.redirect("/newgame");
       ctx.status(302);
+      ctx.redirect("/newgame");
       return ctx;
     }
     
@@ -104,8 +103,8 @@ public class TicTacToeController {
     gameBoard.setGameStarted(true);
     
     logger.info("Added second player; game board is now ready. Player 2: " + gameBoard.getP2());
-    ctx.redirect("/tictactoe.html?p=2"); 
     ctx.status(200);
+    ctx.redirect("/tictactoe.html?p=2"); 
     return ctx;
   }
   
@@ -123,17 +122,16 @@ public class TicTacToeController {
     logger.info("Handling move submitted: " + move);
     
     Message message = gameBoard.processPlayerMove(move);
-    
-    logger.info("Outcome of processed move: " + message);
-    ctx.result(gson.toJson(message));
 
-    if (message.getCode() == MessageStatus.SUCCESS.getValue()
-        || message.getCode() == MessageStatus.GAME_OVER_WINNER.getValue()
-        || message.getCode() == MessageStatus.GAME_OVER_NO_WINNER.getValue()) {
-      ctx.status(200);
-    } else {
-      ctx.status(400);
-    }
+    logger.info("Outcome of processed move: " + message);
+    
+    // for now, all moves get 200 (this is explicit for testing purposes), but may
+    // be changed in the future; note that use of other status codes for invalid
+    // moves, including 4xx does not allow the message to show up in the UI; 
+    // this is why only 200 is used here.
+    ctx.status(200); 
+    ctx.result(gson.toJson(message));
+    
     return ctx;
   }
   

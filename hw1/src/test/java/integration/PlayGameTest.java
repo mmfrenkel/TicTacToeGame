@@ -211,7 +211,7 @@ public class PlayGameTest {
     JSONObject jsonObject = new JSONObject(response.getBody());
     String msg = (String) jsonObject.get("message");
 
-    assertEquals(400, response.getStatus());
+    assertEquals(200, response.getStatus());
     assertEquals("Game cannot start until there are two players", 
         msg.substring(0, 45));
   }
@@ -311,7 +311,7 @@ public class PlayGameTest {
     JSONObject jsonObject = new JSONObject(response.getBody());
     String msg = (String) jsonObject.get("message");
 
-    assertEquals(400, response.getStatus());
+    assertEquals(200, response.getStatus());
     assertEquals("Player 1 makes the first move on an empty board", msg.substring(0, 47));
   }
 
@@ -371,7 +371,7 @@ public class PlayGameTest {
     JSONObject jsonObject = new JSONObject(response.getBody());
     String msg = (String) jsonObject.get("message");
 
-    assertEquals(400, response.getStatus());
+    assertEquals(200, response.getStatus());
     assertEquals("It is not currently your turn.", msg.substring(0, 30));
 
   }
@@ -393,7 +393,7 @@ public class PlayGameTest {
     JSONObject jsonObject = new JSONObject(response.getBody());
     String msg = (String) jsonObject.get("message");
 
-    assertEquals(400, response.getStatus());
+    assertEquals(200, response.getStatus());
     assertEquals("You cannot make a move", msg.substring(0, 22));
 
   }
@@ -415,7 +415,7 @@ public class PlayGameTest {
     JSONObject jsonObject = new JSONObject(response.getBody());
     String msg = (String) jsonObject.get("message");
 
-    assertEquals(400, response.getStatus());
+    assertEquals(200, response.getStatus());
     assertEquals("You cannot make a move", msg.substring(0, 22));
 
   }
@@ -489,7 +489,7 @@ public class PlayGameTest {
     JSONObject jsonObject = new JSONObject(response.getBody());
     String msg = (String) jsonObject.get("message");
 
-    assertEquals(400, response.getStatus());
+    assertEquals(200, response.getStatus());
     assertEquals("Game is already over!", msg.substring(0, 21));
   }
   
