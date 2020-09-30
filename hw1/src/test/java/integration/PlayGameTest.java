@@ -266,6 +266,7 @@ public class PlayGameTest {
     GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
 
     // Check if player type is correct; if Player 1 was 'O', Player 2 should be 'X'
+    assertEquals('O', gameBoard.getP1().getType());
     assertEquals('X', gameBoard.getP2().getType());
 
     // Check that game has started
@@ -345,6 +346,9 @@ public class PlayGameTest {
 
     // Check that gameboard is not empty
     assertEquals(false, gameBoard.isEmpty());
+    
+    // Check that move was made to correct position
+    assertEquals('O', gameBoard.getBoardState()[0][0]);
 
     // Check that it is now player 2's turn
     assertEquals(2, gameBoard.getTurn());
