@@ -2,9 +2,13 @@ package integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import controllers.PlayGame;
+import controllers.TicTacToeController;
+import io.javalin.http.Context;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
@@ -17,6 +21,9 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class PlayGameTest {
@@ -502,67 +509,8 @@ public class PlayGameTest {
   @DisplayName("A game should be a draw if all the positions are exhausted and no one has won.")
   public void testGameEndsWithDraw() {
 
-    // ------ Reset the game to the beginning and add new players  ------
-    HttpResponse<String> response = Unirest
-        .get("http://localhost:8080/newgame")
-        .asString();
-
-    // add back players 1 and 2
-    response = Unirest
-        .post("http://localhost:8080/startgame")
-        .body("type=X")
-        .asString();
-    
-    response = Unirest
-        .get("http://localhost:8080/joingame")
-        .asString();
-
-    // -- Play enough moves for the game board to be in winning configuration ---
-
-    response = Unirest
-        .post("http://localhost:8080/move/1")
-        .body("x=0&y=1")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/2")
-        .body("x=0&y=2")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/1")
-        .body("x=2&y=1")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/2")
-        .body("x=1&y=1")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/1")
-        .body("x=2&y=0")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/2")
-        .body("x=2&y=2")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/1")
-        .body("x=1&y=2")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/2")
-        .body("x=1&y=0")
-        .asString();
-    
-    response = Unirest
-        .post("http://localhost:8080/move/1")
-        .body("x=0&y=0")
-        .asString();
+    //-------- Configure the game board to be a draw -------------
+    HttpResponse<String> response = setDrawGame();
 
     JSONObject jsonObject = new JSONObject(response.getBody());
     String msg = (String) jsonObject.get("message");
@@ -618,6 +566,453 @@ public class PlayGameTest {
 
     // Check that game has not started
     assertEquals(false, gameBoard.isGameStarted());
+  }
+  
+  // ----------- New Tests for Assignment 3: Adding Robustness Tests ---------- //
+  @Test
+  @Order(19)
+  @DisplayName("Every time a new game starts, the database tables must be cleaned.")
+  public void testNewGameClearsDb() {
+    
+    // ------ Setup a Game, in the middle of play ----- //
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/startgame")
+        .body("type=X")
+        .asString();
+    
+    response = Unirest
+        .get("http://localhost:8080/joingame")
+        .asString();
+
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=0&y=1")
+        .asString();
+    
+    // ------- Make request to start new game and check database state --- //
+    
+    response = Unirest
+        .get("http://localhost:8080/newgame")
+        .asString();
+    
+    // check that there are no players no moves on the game board; this request
+    // is made by re-reading information from the database so we know that this
+    // should be the direct reflection of content within the database.
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    // There shouldn't be a player 1 or 2
+    assertNull(gameBoard.getP1());
+    assertNull(gameBoard.getP2());
+    assertEquals(true, gameBoard.isEmpty());
+    assertEquals(gameBoard.isGameStarted(), false);
+  }
+  
+  @Test
+  @Order(20)
+  @DisplayName("If the application crashes after a move, the application must "
+      + "reboot with the game's last move.")
+  public void testRebootWithLastMove() {
+    
+    // ------ Setup a Game, in the middle of play ----- //
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/startgame")
+        .body("type=X")
+        .asString();
+    
+    response = Unirest
+        .get("http://localhost:8080/joingame")
+        .asString();
+
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=0&y=1")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=0&y=0")
+        .asString();
+    
+    // ------- Make request to start new game and check database state --- //
+    
+    // now crash the server and restart
+    PlayGame.stop();
+    PlayGame.main(null);
+    
+    // retrieve the status of the game board on restart
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    // Players 1 and 2 should exist
+    assertEquals(gameBoard.getP1().getType(), 'X');
+    assertEquals(gameBoard.getP2().getType(), 'O');
+    
+    // The the last two moves are on the recovered game board
+    assertEquals('X', gameBoard.getBoardState()[0][1]);
+    assertEquals('O', gameBoard.getBoardState()[0][0]);
+  }
+  
+  @Test
+  @Order(21)
+  @DisplayName("If the application crashes after a draw game, it must "
+      + "reboot to show the draw game board.")
+  public void testRebootDrawGame() {
+    
+    // ------ Setup a Draw Game ------ //
+    
+    setDrawGame();
+    
+    // --- Check on the status of what is returned after the crash -- //
+    
+    // now crash the server and restart
+    PlayGame.stop();
+    PlayGame.main(null);
+    
+    // retrieve the status of the game board on restart
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    // Players 1 and 2 should exist
+    assertEquals(gameBoard.getP1().getType(), 'X');
+    assertEquals(gameBoard.getP2().getType(), 'O');
+    
+    // check to make sure there is not a winner
+    assertEquals(0, gameBoard.getWinner());
+
+    // check to make sure there is a draw
+    assertEquals(true, gameBoard.isDraw());
+    
+    // check that last move made on the game board (see setDrawGame()) has persisted
+    assertEquals('X', gameBoard.getBoardState()[0][0]);
+  }
+  
+  @Test
+  @Order(22)
+  @DisplayName("If the application crashes after a game has ended with a winner, it must "
+      + "reboot to show the draw game board.")
+  public void testRebootWinningGame() {
+    
+    // ------ Setup a Winning Game ------ //
+    
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/startgame")
+        .body("type=X")
+        .asString();
+    
+    response = Unirest
+        .get("http://localhost:8080/joingame")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=0&y=0")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=0&y=1")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=1&y=1")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=0&y=2")
+        .asString();
+
+    // with this move, Player 1 makes a left horizontal and wins
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=2&y=2")
+        .asString();
+    
+    // --- Check on the status of what is returned after the crash -- //
+    
+    // now crash the server and restart
+    PlayGame.stop();
+    PlayGame.main(null);
+    
+    // retrieve the status of the game board on restart
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    // Players 1 and 2 should exist
+    assertEquals(gameBoard.getP1().getType(), 'X');
+    assertEquals(gameBoard.getP2().getType(), 'O');
+    
+    // check to make sure there is not a winner
+    assertEquals(1, gameBoard.getWinner());
+
+    // check to make sure there is a draw
+    assertEquals(false, gameBoard.isDraw());
+    
+    // check that winning positions made on the game board (see setDrawGame()) have persisted
+    assertEquals('X', gameBoard.getBoardState()[0][0]);
+    assertEquals('X', gameBoard.getBoardState()[1][1]);
+    assertEquals('X', gameBoard.getBoardState()[2][2]);
+  }
+  
+  @Test
+  @Order(23)
+  @DisplayName("If player 1 had started a game and the application crashed, "
+      + "it should reboot with player 1 as part of gameboard")
+  public void testRebootWithPlayer1() {
+    
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/startgame")
+        .body("type=X")
+        .asString();
+    
+    // now crash the server and restart
+    PlayGame.stop();
+    PlayGame.main(null);
+    
+    // retrieve the status of the game board on restart
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    // Players 1 should exist and 2 should not
+    assertEquals('X', gameBoard.getP1().getType());
+    assertNull(gameBoard.getP2());
+    
+    assertEquals(true, gameBoard.isEmpty());
+    assertEquals(false, gameBoard.isGameStarted());
+    
+  }
+  
+  @Test
+  @Order(24)
+  @DisplayName("If player 2 had joined the game and the application crashed, the "
+      + "application should reboot with player 2 as part of the game and the "
+      + "corresponding board game status")
+  public void testRebootWithPlayer2() {
+    
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/startgame")
+        .body("type=X")
+        .asString();
+    
+    response = Unirest
+        .get("http://localhost:8080/joingame")
+        .asString();
+    
+    // now crash the server and restart
+    PlayGame.stop();
+    PlayGame.main(null);
+    
+    // retrieve the status of the game board on restart
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    // Players 1 and 2 should exist
+    assertEquals('X', gameBoard.getP1().getType());
+    assertEquals('O', gameBoard.getP2().getType());
+    
+    assertEquals(gameBoard.isEmpty(), true);
+    assertEquals(gameBoard.isGameStarted(), true);
+    
+  }
+  
+  @Test
+  @Order(25)
+  @DisplayName("If player 2 had joined the game and the application crashed, the "
+      + "application should reboot with player 2 as part of the game and the "
+      + "corresponding board game status")
+  public void testRebootAfterNewGame() {
+    
+    // set to a new game
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    PlayGame.stop();
+    PlayGame.main(null);
+    
+    // retrieve the status of the game board on restart
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    // players should not exist on this game board
+    assertNull(gameBoard.getP1());
+    assertNull(gameBoard.getP2());
+    
+    assertEquals(true, gameBoard.isEmpty());
+    assertEquals(false, gameBoard.isGameStarted());   
+  }
+  
+  @Test
+  @Order(26)
+  @DisplayName("If the application crashes after a player attempts an invalid move, "
+      + "the application must reboot with the last valid move state")
+  public void testRebootAfterInvalidMove() {
+    
+    // Create an active game and play a few moves
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/startgame")
+        .body("type=X")
+        .asString();
+    
+    response = Unirest
+        .get("http://localhost:8080/joingame")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=2&y=0")
+        .asString();
+    
+    // make an invalid move...
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=0&y=7")
+        .asString();
+    
+    // then crash the game
+    PlayGame.stop();
+    PlayGame.main(null);
+    
+    // retrieve the status of the game board on restart
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+
+    // Get the GameBoard that was returned to the user
+    GameBoard gameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    // Players 1 and 2 should exist
+    assertEquals('X', gameBoard.getP1().getType());
+    assertEquals('O', gameBoard.getP2().getType());
+    
+    // old moves that were valid should persist
+    assertEquals('X', gameBoard.getBoardState()[2][0]);
+    assertEquals(false, gameBoard.isEmpty());
+  }
+  
+  /**
+   * Helper function to set game board into a draw configuration.
+   * Returns the last response result.
+   */
+  public HttpResponse<String> setDrawGame() {
+    
+    // ------ Reset the game to the beginning and add new players  ------
+    HttpResponse<String> response = Unirest
+        .get("http://localhost:8080/newgame")
+        .asString();
+
+    // add back players 1 and 2
+    response = Unirest
+        .post("http://localhost:8080/startgame")
+        .body("type=X")
+        .asString();
+    
+    response = Unirest
+        .get("http://localhost:8080/joingame")
+        .asString();
+
+    // -- Play enough moves for the game board to be in draw configuration ---
+
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=0&y=1")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=0&y=2")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=2&y=1")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=1&y=1")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=2&y=0")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=2&y=2")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=1&y=2")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/2")
+        .body("x=1&y=0")
+        .asString();
+    
+    response = Unirest
+        .post("http://localhost:8080/move/1")
+        .body("x=0&y=0")
+        .asString();
+    
+    return response;
   }
 
   /**

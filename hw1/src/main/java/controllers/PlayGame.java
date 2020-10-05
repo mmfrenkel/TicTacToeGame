@@ -14,6 +14,10 @@ public class PlayGame {
   private static final int PORT_NUMBER = 8080;
 
   private static Javalin app;
+  
+  private static TicTacToeController tttcontroller;
+  
+  private static TicTacToeSqliteDbService dbService;
 
   private static Logger logger = LoggerFactory.getLogger(PlayGame.class);
 
@@ -26,7 +30,7 @@ public class PlayGame {
 
     logger.info("Starting application...");
 
-    TicTacToeSqliteDbService dbService = new TicTacToeSqliteDbService();
+    dbService = new TicTacToeSqliteDbService();
     
     try {
       // create database tables, if they do not already exist
@@ -38,7 +42,7 @@ public class PlayGame {
       System.exit(1);
     }
     
-    TicTacToeController tttcontroller = new TicTacToeController();
+    tttcontroller = new TicTacToeController();
 
     app = Javalin.create(config -> {
       config.addStaticFiles("/public");

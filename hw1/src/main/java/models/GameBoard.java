@@ -260,9 +260,33 @@ public class GameBoard implements GenericGameBoard {
             + " made move at (" + move.getMoveX() + ", " + move.getMoveY() + ").");
       }
       
-      saveMove(move);
+      saveMove(move);  // this saves the move but doesn't officially commit it
     }
     return message;
+  }
+  
+  /**
+   * Should be called after `processPlayerMove` when the user is confident that
+   * the move made should be permanent.
+   * 
+   * @throws GameBoardInternalError if any issue occurred committing the transaction.
+   */
+  public void commitMove() throws GameBoardInternalError {
+    if (dbService == null) {
+      return;
+    }
+    try {
+      dbService.commit();
+    } catch (DbServiceException e) {
+      try {
+        dbService.close();
+      } catch (DbServiceException e1) {
+        e1.printStackTrace();
+      }
+      
+      throw new GameBoardInternalError("Player move could not be saved to the "
+          + "database due to a database error.");
+    }
   }
   
   /**
@@ -310,7 +334,7 @@ public class GameBoard implements GenericGameBoard {
   }
   
   /**
-   * Saves the player move to the database.
+   * Saves the player move to the database, but doesn't do the commit step.
    * 
    * @param move Instance of Move to save
    * @throws GameBoardInternalError if there was an issue saving the move to the
@@ -321,7 +345,6 @@ public class GameBoard implements GenericGameBoard {
       dbService.connect();
       dbService.saveValidMove(move, gameId);
       dbService.saveGameState(this, gameId);
-      dbService.commit();
 
     } catch (DbServiceException e) {
       e.printStackTrace();

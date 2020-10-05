@@ -185,17 +185,20 @@ public class TicTacToeController {
     try {
       Message message = gameBoard.processPlayerMove(move);
       logger.info("Outcome of processed move: " + message);
-    
       ctx.result(gson.toJson(message));
+      
+      ctx.status(200); 
+      
+      // only commit the move after all else is OK and we're ready to respond to user
+      gameBoard.commitMove();
+      return ctx;
+      
     } catch (GameBoardInternalError e) {
       ctx.result("Move on game board could not be processed due to a database issue; " 
           + "please try again!");
       ctx.status(500); // this would be an un-handled internal error
       return ctx;
     }
-
-    ctx.status(200); 
-    return ctx;
   }
   
   /**
