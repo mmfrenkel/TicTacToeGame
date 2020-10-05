@@ -3,8 +3,11 @@ package models;
 import com.google.gson.annotations.Expose;
 import java.util.Arrays;
 import java.util.List;
+import util.DbServiceException;
+import util.TicTacToeDbService;
+import util.TicTacToeSqliteDbService;
 
-public class GameBoard {
+public class GameBoard implements GenericGameBoard {
 
   /* - @Expose tells GSON to add only the below fields to JSON - */
   
@@ -32,32 +35,52 @@ public class GameBoard {
   /* -- end fields to serialize to JSON from object here -- */
 
   // a standard tic-tac-toe board has 3 rows and 3 columns  
-  private static final int columns = 3;
+  static final int columns = 3;
 
-  private static final int rows = 3;
+  static final int rows = 3;
+  
+  private TicTacToeDbService dbService;
+  
+  // currently there is only game "1" until game supports more than 1 game at a time
+  // hence, the "current" game will always be the game with gameId = 1.
+  private int gameId = 1; 
   
   // the accepted player types for this board
   private final List<Character> acceptedTypes = Arrays.asList('X', 'O');
   
   /**
-   *  Primary Constructor for GameBoard(), which will create an empty game board (i.e.,
-   *  no players, game not started, no one's turn, empty board state, and no winner or draw.
+   * Primary Constructor for GameBoard(), which will create an empty game board
+   * (i.e., no players, game not started, no one's turn, empty board state, and no
+   * winner or draw.
+   * 
+   * @param dbService instance of TicTacToeDbService to use; this can be any
+   *                  database service, but is TicTacToeDbService by default if
+   *                  using the empty argument constructor.
    */
-  public GameBoard() {
+  public GameBoard(TicTacToeDbService dbService) {
     this.p1 = null;
     this.p2 = null;
     this.gameStarted = false; // game cannot start until there are two players
-    this.turn = 0; // no ones turn yet
-    this.boardState = new char[columns][rows]; // contents are 0 or '\u0000' by default
-    this.winner = 0; // no one is a winner yet
+    this.turn = 0;            // no ones turn yet
+    this.boardState = new char[columns][rows];  // contents are 0 or '\u0000' by default
+    this.winner = 0;          // no one is a winner yet
     this.isDraw = false;
+    this.dbService = dbService;
   }
   
   /**
+   * Secondary Constructor where database is not specified and the
+   * SQLliteDbService class is used by default.
+   */
+  public GameBoard() {
+    this(new TicTacToeSqliteDbService());
+  }
+
+  /**
    * Secondary Constructor primarily for easy testing, where a user is able to
-   * provide any configuration of the board that they'd like. As a
-   * warning, this constructor does not check for invalid configurations and
-   * assumes a user understands the tic-tac-toe board game rules.
+   * provide any configuration of the board that they'd like. As a warning, this
+   * constructor does not check for invalid configurations and assumes a user
+   * understands the tic-tac-toe board game rules.
    * 
    * @param p1          instance of Player object, representing player 1
    * @param p2          instance of Player object, representing player 2
@@ -68,9 +91,12 @@ public class GameBoard {
    *                    board state
    * @param winner      integer representing player ID of winner; 0 if no winner
    * @param isDraw      boolean, for if the game is already a draw
+   * @param dbService   instance of TicTacToeDbService to use; this can be any
+   *                    database service, but is TicTacToeDbService by default if
+   *                    using the empty argument constructor
    */
-  public GameBoard(Player p1, Player p2, boolean gameStarted, int turn, char[][] state, 
-      int winner, boolean isDraw) {
+  public GameBoard(Player p1, Player p2, boolean gameStarted, int turn, char[][] state, int winner, 
+      boolean isDraw, TicTacToeDbService dbService) {
     this.p1 = p1;
     this.p2 = p2;
     this.gameStarted = gameStarted;
@@ -78,8 +104,68 @@ public class GameBoard {
     this.winner = winner;
     this.isDraw = isDraw;
     setBoardState(state);
+    this.dbService = dbService;
+  }
+
+  /**
+   * Reset game board to the original and deletes previous instance in database.
+   * 
+   * @throws GameBoardInternalError thrown when an issue occurs reseting the game
+   *                                in the database
+   */
+  public void resetGameboard() throws GameBoardInternalError {
+    
+    // reset all instance variables
+    this.p1 = null;
+    this.p2 = null;
+    this.gameStarted = false;
+    this.turn = 0;
+    this.boardState = new char[columns][rows];  
+    this.winner = 0;        
+    this.isDraw = false;
+    
+    try {
+      // delete the old game content from the database
+      // this has to happen in two steps because otherwise the database file has a
+      // lock on the row for gameId = 1 and unfortunately, for this iteration of the
+      // game, the gameId is always 1.
+      dbService.connect();
+      dbService.deleteGame(gameId, true);
+  
+      // create the new game in db
+      dbService.createNewGame(gameId);
+      dbService.commit();
+    } catch (DbServiceException e) {
+      e.printStackTrace();
+    
+      try {
+        dbService.close();
+      }  catch (DbServiceException e1) {
+        e1.printStackTrace();
+      }
+      throw new GameBoardInternalError("Reset gameboard operation failed.");
+    }
   }
   
+  /**
+   * Loads the most recent version of the game board from the database. If there
+   * is no game board yet, then the database returns a new game board.
+   * 
+   * @throws GameBoardInternalError if an error with the database occurred
+   */
+  public GameBoard getMostRecentDbState() throws GameBoardInternalError {
+    try {
+      GameBoard gb = (GameBoard) dbService.restoreMostRecentGameBoard();
+      return gb;
+
+    } catch (DbServiceException dbse) {
+      System.err.println(dbse.getClass().getName() + ": " + dbse.getMessage());
+      throw new GameBoardInternalError("Error encountered getting gameboard's "
+          + "most recent state.");
+    }
+  }
+  
+
   /**
    * Determines whether or not the game board is currently empty.
    * 
@@ -121,8 +207,10 @@ public class GameBoard {
    * 
    * @param move instance of player Move
    * @return Message() object, reflecting outcome of Move
+   * @throws GameBoardInternalError if there is an issue saving a valid move to
+   *                                the database
    */
-  public Message processPlayerMove(Move move) {
+  public Message processPlayerMove(Move move) throws GameBoardInternalError {
     Message message;
     
     /* ---- Need to check several states to make sure move is valid ---- */
@@ -170,10 +258,9 @@ public class GameBoard {
         // 6c. No winners or draw yet
         message = new Message(true, MessageStatus.SUCCESS, "Player " + move.getPlayerId()
             + " made move at (" + move.getMoveX() + ", " + move.getMoveY() + ").");
-        
-        // swap turns for players
-        setTurn(move.getPlayerId() == 1 ? 2 : 1);
       }
+      
+      saveMove(move);
     }
     return message;
   }
@@ -216,8 +303,37 @@ public class GameBoard {
     this.boardState[x][y] = type;
     
     if (isWinningMove(x, y, type)) {
-      int playerId = move.getPlayer().getId();
-      this.setWinner(playerId);
+      this.setWinner(move.getPlayer().getId());
+    }
+    // swap turns for players
+    setTurn(move.getPlayerId() == 1 ? 2 : 1);
+  }
+  
+  /**
+   * Saves the player move to the database.
+   * 
+   * @param move Instance of Move to save
+   * @throws GameBoardInternalError if there was an issue saving the move to the
+   *                                database
+   */
+  private void saveMove(Move move) throws GameBoardInternalError {
+    try {
+      dbService.connect();
+      dbService.saveValidMove(move, gameId);
+      dbService.saveGameState(this, gameId);
+      dbService.commit();
+
+    } catch (DbServiceException e) {
+      e.printStackTrace();
+
+      try {
+        dbService.close();
+      } catch (DbServiceException e1) {
+        e1.printStackTrace();
+      }
+      
+      throw new GameBoardInternalError("Player move could not be saved to the "
+          + "database due to a database error.");
     }
   }
   
@@ -337,9 +453,39 @@ public class GameBoard {
   }
   
   /**
+   * Sets Player 1 on the game board and saves Player 1 to the database.
+   * 
+   * @param p1 instance of Player object
+   * @throws GameBoardInternalError if there was an issue saving player 1 to the
+   *                                database
+   */
+  public void saveP1(Player p1) throws GameBoardInternalError {
+    setP1(p1);
+    this.setTurn(1);
+
+    try {
+      dbService.connect();
+      dbService.savePlayer(getP1(), gameId);
+      dbService.saveGameState(this, gameId);
+      dbService.commit();
+
+    } catch (DbServiceException e) {
+      e.printStackTrace();
+
+      try {
+        dbService.close();
+      } catch (DbServiceException e1) {
+        e1.printStackTrace();
+      }
+      throw new GameBoardInternalError("Error was encountered trying to save " 
+          + " player 1 to the database.");
+    }
+  }
+  
+  /**
    * Sets Player 1 on the game board.
-   *  
-   * @param p1  instance of Player object
+   * 
+   * @param p1 instance of Player object
    */
   public void setP1(Player p1) {
     this.p1 = p1;
@@ -358,12 +504,34 @@ public class GameBoard {
   /**
    * Will auto-set player 2 as the player type that player 1 is not. For
    * example, if player 1 already exists and has chosen type 'X', then player 2
-   * will be 'O'.
+   * will be 'O'. Saves the change to the database.
+   * 
+   * @throws GameBoardInternalError if there was an error updating the database
    */
-  public void autoSetP2() {
+  public void autoSetP2() throws GameBoardInternalError {
     char playerType = getP1().getType() == 'X' ? 'O' : 'X';
     Player p2 = new Player(playerType, 2);
-    this.p2 = p2;
+    setP2(p2);
+    setGameStarted(true);
+    
+    try {
+      // save information to database
+      dbService.connect();
+      dbService.savePlayer(getP2(), gameId);
+      dbService.saveGameState(this, gameId);
+      dbService.commit();
+
+    } catch (DbServiceException e) {
+      e.printStackTrace();
+
+      try {
+        dbService.close();
+      } catch (DbServiceException e1) {
+        e1.printStackTrace();
+      }
+      throw new GameBoardInternalError("Error was encountered trying to save "
+          + " player 2 to the database.");
+    }
   }
   
   /**
@@ -555,6 +723,14 @@ public class GameBoard {
     return this.acceptedTypes;
   }
   
+  public static int getColumns() {
+    return columns;
+  }
+
+  public static int getRows() {
+    return rows;
+  }
+
   /**
    * Prints out the game board as a 3 x 3 square, visually similar to the board
    * shown in web UI. Helpful for logging and debugging.

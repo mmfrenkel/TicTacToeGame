@@ -5,37 +5,82 @@ import com.google.gson.GsonBuilder;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import models.GameBoard;
+import models.GameBoardInternalError;
 import models.Message;
 import models.Move;
 import models.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.TicTacToeDbService;
 
 public class TicTacToeController {
 
   private GameBoard gameBoard;
   
-  private static Logger logger = LoggerFactory.getLogger(PlayGame.class);
+  private static Logger logger = LoggerFactory.getLogger(TicTacToeController.class);
   
   // Utilize Gson for object->json mapping instead of Jackson, the Javalin default
   private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-  
+
+  /**
+   * Primary Constructor to use default empty game board configuration.
+   */
   public TicTacToeController() {
     this.gameBoard = new GameBoard();
+  }
+  
+  /**
+   * Secondary Constructor to set game board state manually. This is important for
+   * testing.
+   * 
+   * @param gameBoard GameBoard instance
+   */
+  public TicTacToeController(GameBoard gameBoard) {
+    this.gameBoard = gameBoard;
+  }
+  
+  public TicTacToeController(TicTacToeDbService dbService) {
+    this.gameBoard = new GameBoard(dbService);
+  }
+  
+  /**
+   * Sets the game board to the most recent game board in the database.
+   * 
+   * @throws GameBoardInternalError if there was an issue getting the last game
+   *                                from the database
+   */
+  public void loadGameBoard() throws GameBoardInternalError {
+    try {
+      GameBoard lastState = gameBoard.getMostRecentDbState();
+      setGameBoard(lastState);
+      logger.info(getGameBoardAsJson());
+      
+    } catch (GameBoardInternalError e) {
+      System.err.println(e.getClass().getName() + ": " + e.getMessage());
+      throw e;
+    }
   }
 
   /**
    * Redirects user to a new game board and resets the game board to a new,
-   * cleared board without any players or moves.
+   * cleared board without any players or moves. This includes
+   * deleting the existing game from the database.
    * 
    * @param ctx Context object for incoming request
    * @return Context object updated
    */
   public Context serveNewGame(Context ctx) {
-    logger.info("Received request to start a new game!");
+    try {
+      gameBoard.resetGameboard();
+      
+    } catch (GameBoardInternalError e) {
+      ctx.result("An issue was encountered clearing the database for the new game. "
+          + "Please try again.");
+      ctx.status(500);              // this would be an unhandled internal error
+      return ctx;
+    } 
     
-    setGameBoard(new GameBoard()); // used to reset gameBoard when necessary
-    ctx.status(200);               // redirect
+    ctx.status(200); 
     ctx.redirect("/tictactoe.html");
     return ctx;
   }
@@ -51,7 +96,7 @@ public class TicTacToeController {
    *                            player type was provided
    */
   public Context startGame(Context ctx) {
-    
+      
     // if there is already a player 1, we don't want to kick them out!
     if (gameBoard.getP1() != null) {
       throw new BadRequestResponse("There is already a Player 1 for this game board."
@@ -59,14 +104,22 @@ public class TicTacToeController {
           + "or to join the existing game, ask Player 1 to share his join link, "
           + "or vist our /joingame enpoint.");
     }
-  
+    
     // Parse player 1 information then add player one to the game
     Player player1 = parsePlayerOneFromRequest(ctx);
-    gameBoard.setP1(player1);
-    gameBoard.setTurn(1);
     
+    try {
+      gameBoard.saveP1(player1);
+      ctx.result(getGameBoardAsJson());
+      
+    } catch (GameBoardInternalError e) {
+      ctx.result("Could not create Player 1; it's possible that you never started a game. "
+          + "Please go to /newgame first and try again.");
+      ctx.status(500);
+      return ctx;
+    }
+
     logger.info("Added first player to the game: " + player1);
-    ctx.result(getGameBoardAsJson());
     ctx.status(200);
     return ctx;
   }
@@ -81,6 +134,8 @@ public class TicTacToeController {
    * @throws BadRequestResponse if Player 2 already exists for this game
    */
   public Context addSecondPlayer(Context ctx) {
+    
+    logger.info(getGameBoardAsJson());
     
     // if there is already a player 2, we don't want to kick them out!
     if (gameBoard.getP2() != null) {
@@ -99,10 +154,16 @@ public class TicTacToeController {
       return ctx;
     }
     
-    gameBoard.autoSetP2();
-    gameBoard.setGameStarted(true);
+    try {
+      // update player in memory + db
+      gameBoard.autoSetP2();
+      
+    } catch (GameBoardInternalError e) {
+      ctx.result("Could not add Player 2 due to a game board error; please try again!");
+      ctx.status(500); // this would be an un-handled internal error
+      return ctx;
+    }
     
-    logger.info("Added second player; game board is now ready. Player 2: " + gameBoard.getP2());
     ctx.status(200);
     ctx.redirect("/tictactoe.html?p=2"); 
     return ctx;
@@ -117,21 +178,23 @@ public class TicTacToeController {
    * @return Updated Context object
    */
   public Context processPlayerMove(Context ctx) {
-  
+    
     Move move = parseMoveFromRequest(ctx);
     logger.info("Handling move submitted: " + move);
     
-    Message message = gameBoard.processPlayerMove(move);
+    try {
+      Message message = gameBoard.processPlayerMove(move);
+      logger.info("Outcome of processed move: " + message);
+    
+      ctx.result(gson.toJson(message));
+    } catch (GameBoardInternalError e) {
+      ctx.result("Move on game board could not be processed due to a database issue; " 
+          + "please try again!");
+      ctx.status(500); // this would be an un-handled internal error
+      return ctx;
+    }
 
-    logger.info("Outcome of processed move: " + message);
-    
-    // for now, all moves get 200 (this is explicit for testing purposes), but may
-    // be changed in the future; note that use of other status codes for invalid
-    // moves, including 4xx does not allow the message to show up in the UI; 
-    // this is why only 200 is used here.
     ctx.status(200); 
-    ctx.result(gson.toJson(message));
-    
     return ctx;
   }
   

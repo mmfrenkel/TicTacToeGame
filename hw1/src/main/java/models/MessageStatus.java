@@ -15,7 +15,8 @@ public enum MessageStatus {
   OTHER_PLAYERS_TURN(413),
   GAME_ALREADY_OVER(414), 
   GAME_OVER_WINNER(110), 
-  GAME_OVER_NO_WINNER(111);
+  GAME_OVER_NO_WINNER(111),
+  DATABASE_ERROR(500);
   
   private int value;
   

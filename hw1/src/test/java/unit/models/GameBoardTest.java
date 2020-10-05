@@ -2,8 +2,10 @@ package unit.models;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
 import models.GameBoard;
+import models.GameBoardInternalError;
 import models.InvalidGameBoardConfigurationException;
 import models.Message;
 import models.MessageStatus;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import util.TicTacToeSqliteDbService;
 
 class GameBoardTest {
 
@@ -27,9 +30,13 @@ class GameBoardTest {
    */
   @BeforeEach
   void setGameboard() {
-    this.emptyTestBoard = new GameBoard();
+    
+    // set up a mock for the database service
+    TicTacToeSqliteDbService dbService = mock(TicTacToeSqliteDbService.class);
+    
+    this.emptyTestBoard = new GameBoard(dbService);
     this.activeTestBoard = new GameBoard(player1, player2, true, 1, 
-        emptyBoard, 0, false);
+        emptyBoard, 0, false, dbService);
   }
 
   /**
@@ -133,13 +140,13 @@ class GameBoardTest {
   void testPlayMove() {
 
     char[][] startingBoardState = { { 0, 0, 'O' }, { 0, 0, 'X' }, { 0, 0, 0 } };
-    emptyTestBoard.setBoardState(startingBoardState);
+    activeTestBoard.setBoardState(startingBoardState);
 
     Move move = new Move(player1, 0, 1);
-    emptyTestBoard.playMove(move);
+    activeTestBoard.playMove(move);
     char[][] expectedBoardState = { { 0, 'X', 'O' }, { 0, 0, 'X' }, { 0, 0, 0 } };
 
-    assertArrayEquals(expectedBoardState, emptyTestBoard.getBoardState());
+    assertArrayEquals(expectedBoardState, activeTestBoard.getBoardState());
   }
 
   /**
@@ -314,11 +321,12 @@ class GameBoardTest {
   /**
    * Test that if the gameboard has no players, and the Move is not assigned to a
    * player, the move cannot be made due to a missing player violation.
+   * @throws GameBoardInternalError this 
    */
   @Test()
   @DisplayName("Gameboard has no players, game has not started and player "
       + "should not be able to make move.")
-  void preventPlayingMoveIfMissingPlayers() {
+  void preventPlayingMoveIfMissingPlayers() throws GameBoardInternalError {
 
     Move move = new Move(null, 0, 0);
 
@@ -334,7 +342,7 @@ class GameBoardTest {
   @Test()
   @DisplayName("Gameboard has only 1 player, game has not started and player " + ""
       + "should not be able to make move.")
-  void preventPlayingMoveIfMissingPlayer() {
+  void preventPlayingMoveIfMissingPlayer() throws GameBoardInternalError {
 
     // configure game board for test
     char[][] boardState = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
@@ -353,7 +361,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("Player two player should never be the one to make the first move.")
-  void testPlayerOneAlwaysPlaysFirst() {
+  void testPlayerOneAlwaysPlaysFirst() throws GameBoardInternalError {
     char[][] boardState = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
     activeTestBoard.setBoardState(boardState);
 
@@ -369,7 +377,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("First player is allowed to make the first move.")
-  void testPlayerOneAlwaysPlaysFirstOK() {
+  void testPlayerOneAlwaysPlaysFirstOK() throws GameBoardInternalError {
     char[][] boardState = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
     activeTestBoard.setBoardState(boardState);
 
@@ -385,7 +393,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("Player should not be able to make a move if it is not their turn.")
-  void playerCannotMakeMoveIfNotTheirTurn() {
+  void playerCannotMakeMoveIfNotTheirTurn() throws GameBoardInternalError {
 
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 0, 'O', 0 }, { 'X', 0, 0 } };
@@ -404,7 +412,7 @@ class GameBoardTest {
   @Test()
   @DisplayName("Player should not be able to make a move the position requested " 
       + "" + "is already occupied.")
-  void playerCannotMakeMoveToOccupiedPosition() {
+  void playerCannotMakeMoveToOccupiedPosition() throws GameBoardInternalError {
 
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 0, 'O', 0 }, { 'X', 0, 0 } };
@@ -423,7 +431,7 @@ class GameBoardTest {
   @Test()
   @DisplayName("Player should not be able to make a move the position on the board " + ""
       + "that doesn't exist.")
-  void playerCannotMakeMoveToNonexistentPosition() {
+  void playerCannotMakeMoveToNonexistentPosition() throws GameBoardInternalError {
 
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 0, 'O', 0 }, { 'X', 0, 0 } };
@@ -442,7 +450,7 @@ class GameBoardTest {
   @Test()
   @DisplayName("Player should not be able to continue playing if other "
       + "player already won.")
-  void playerCannotMakeMoveIfGameOver() {
+  void playerCannotMakeMoveIfGameOver() throws GameBoardInternalError {
 
     // configure game board for test
     char[][] boardState = { { 'O', 'X', 0 }, { 'O', 'X', 0 }, { 'O', 0, 'X' } };
@@ -460,7 +468,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("Player made winning move; game should report that they have won.")
-  void playerMakesWinningMove() {
+  void playerMakesWinningMove() throws GameBoardInternalError {
 
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 'O', 'X', 0 }, { 'O', 0, 0 } };
@@ -478,7 +486,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("Player made the last available move on the board, but no one won.")
-  void playerMakesMoveForDraw() {
+  void playerMakesMoveForDraw() throws GameBoardInternalError {
 
     // configure game board for test
     char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' }, { 'X', 0, 'X' } };
@@ -498,7 +506,7 @@ class GameBoardTest {
   @Test()
   @DisplayName("Player made move; no one has won and no draw yet. "
       + "Player 2 should go next.")
-  void turnSwitchesToOtherPlayerIfNoWinner1() {
+  void turnSwitchesToOtherPlayerIfNoWinner1() throws GameBoardInternalError {
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 0, 'O', 0 }, { 0, 0, 0 } };
     activeTestBoard.setBoardState(boardState);
@@ -517,7 +525,7 @@ class GameBoardTest {
   @Test()
   @DisplayName("Player made move; no one has won and no draw yet. "
       + "Player 1 should go next.")
-  void turnSwitchesToOtherPlayerIfNoWinner2() {
+  void turnSwitchesToOtherPlayerIfNoWinner2() throws GameBoardInternalError {
     // configure game board for test
     char[][] boardState = { { 0, 'X', 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
     activeTestBoard.setBoardState(boardState);
@@ -535,7 +543,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("Player 2 should not be able to make the first move")
-  void playerTwoAttemptsFirstMove() {
+  void playerTwoAttemptsFirstMove() throws GameBoardInternalError {
     // configure game board for test
     char[][] boardState = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
     activeTestBoard.setBoardState(boardState);
@@ -552,7 +560,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("If Player 1 is already X, Player 2 should be auto-assigned O.")
-  void testAutoSetPlayerP2O() {
+  void testAutoSetPlayerP2O() throws GameBoardInternalError {
 
     this.emptyTestBoard.setP1(player1);
 
@@ -568,7 +576,7 @@ class GameBoardTest {
    */
   @Test()
   @DisplayName("If Player 1 is already O, Player 2 should be auto-assigned X.")
-  void testAutoSetPlayerP2X() {
+  void testAutoSetPlayerP2X() throws GameBoardInternalError {
 
     this.emptyTestBoard.setP1(player2); // testing auto-assignment of move type
 

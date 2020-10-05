@@ -6,6 +6,8 @@ import java.util.Queue;
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.DbServiceException;
+import util.TicTacToeSqliteDbService;
 
 public class PlayGame {
 
@@ -23,12 +25,30 @@ public class PlayGame {
   public static void main(final String[] args) {
 
     logger.info("Starting application...");
+
+    TicTacToeSqliteDbService dbService = new TicTacToeSqliteDbService();
+    
+    try {
+      // create database tables, if they do not already exist
+      logger.info("Creating database tables, if necessary...");
+      dbService.createDatabasesTables();
+      
+    } catch (DbServiceException dbse) {
+      System.err.println(dbse.getClass().getName() + ": " + dbse.getMessage());
+      System.exit(1);
+    }
+    
     TicTacToeController tttcontroller = new TicTacToeController();
 
     app = Javalin.create(config -> {
       config.addStaticFiles("/public");
       config.enableDevLogging();
     }).start(PORT_NUMBER);
+    
+    app.before(ctx -> {
+      logger.info("Loading game board...");
+      tttcontroller.loadGameBoard();
+    });
 
     app.get("/", ctx -> {
       ctx.redirect("/newgame");
@@ -53,6 +73,7 @@ public class PlayGame {
     });
 
     app.post("/move/:playerId", ctx -> {
+      logger.info("Received request to log a move for a player.");
       tttcontroller.processPlayerMove(ctx);
       sendGameBoardToAllPlayers(tttcontroller.getGameBoardAsJson());
     });

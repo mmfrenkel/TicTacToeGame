@@ -55,19 +55,30 @@ If player 1 already exists on the gameboard then the user is notified that they 
 
 This project was developed on macOS Catalina (Version 10.15.6) with IDE support from Eclipse using Java 11.0.2. The UI was tested using Postman and both Safari and Chrome as web browsers.
 
+You can get started working with this project via:
+```
+$ mvn clean 
+$ mvn install
+```
+Note that the `install` step will also the tests outlined below.
+
 To run this project, there is no need to install a server; it is easiest to run the program simply by right-clicking on the `PlayGame.java` file in Eclipse and running it as a Java application.
 
 There is a test suite built for this project, which includes both Junit unit tests and Unirest-Java API integration tests. Both sets of tests can be run in series by issuing the following command in the command line (or by using the Eclipse UI):
 ```
 $ mvn test
 ```
-All tests (currently 121 total, 103 unit tests and 18 integration tests) should pass. Code testing coverage was checked using the Emma plugin in Eclipse and was calculated as 97%. The remaining 3% is (a) code that is either (1) unreachable (not possible to test) or (b) template code and/or previously implemented code as part of this assignment (i.e., web socket code). Note that occasionally, several unit tests for the TicTacToeControllerTest.java fail due a return type error; this shouldn't occur, as the problematic method within the controller for these tests is mocked using mockito. Nevertheless, this issue has appeared randomly and appears transient (simply re-run tests again, while the root cause of the issue continutes to be sourced).
+All tests (currently 121 total, 103 unit tests and 18 integration tests) should pass. Code testing coverage was checked using the Emma plugin in Eclipse and was calculated as 97%. The remaining 3% is (a) code that is either (1) unreachable (not possible to test) or (b) template code and/or previously implemented code as part of this assignment (i.e., web socket code). 
 
 This project uses Checkstyle as a tool for ensuring that this code adheres to industry coding standards. Run the checkstyle tool by issuing the command below and reviewing the output found within `target/site/images/checkstyle.html`.
 ```
 $ mvn checkstyle:checkstyle
 ```
-Finally, this tool uses the SpotBugs plugin in Eclipse to identify any instances in this code base that have bug patterns. "Spot bugs" detected were resolved only in the main source code; warnings flagged in the test directory were ignored.
+Finally, this project utilized the SpotBugs plugin in Eclipse to identify any instances in this code base that have bug patterns. "Spot bugs" detected were resolved only in the main source code; warnings flagged in the test directory were ignored. You can generate a SpotBugs report at any time, available in `target/site/images/spotbugs.html` , by issuing:
+```
+$ mvn site
+```
+Note that sometimes the SpotBug report doesn't generate until the  `mvn install` step is conducted.
 
 ## Credits
 

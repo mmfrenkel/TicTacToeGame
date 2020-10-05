@@ -1,6 +1,5 @@
 package unit.controllers;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -20,13 +19,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import util.TicTacToeSqliteDbService;
 
 class TicTacToeControllerTest {
 
   private Context ctx;
-  
+
   private TicTacToeController tttcontroller;
-  
+
   // mock controller needed for tests calling parsePlayerIdFromPathParam() method
   private TicTacToeController mockTttcontroller;
   
@@ -39,24 +39,25 @@ class TicTacToeControllerTest {
    * of the tests use the true TicTacToeController instance, others require
    * a mock of the controller, where a single method is mocked (and the rest
    * are true to the original controller). To facilitate testing, an instance
-   * of an active gameboard is provided.
+   * of an active game board is provided.
    */
   @BeforeEach
   void refreshTest() {
-   
+    
+    // a sample game board to facilitate in setting the status of the game
+    TicTacToeSqliteDbService dbService = mock(TicTacToeSqliteDbService.class);
+    
+    // setup mocks
     ctx = mock(Context.class);
+    mockTttcontroller = Mockito.spy(new TicTacToeController(dbService));
     
-    // there is only one method we need to mock, so the rest of them 
-    // can be real by default for the TicTacToeController class
-    tttcontroller = new TicTacToeController();
+    // "real" controller instance, but with mock db
+    tttcontroller = new TicTacToeController(dbService);
     
-    mockTttcontroller = Mockito.spy(new TicTacToeController());
-    
-    // a sample gameboard to faciliate in setting the status of the game
     char[][] emptyBoard = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
     Player player1 = new Player('X', 1);
     Player player2 = new Player('O', 2);
-    activeGameBoard = new GameBoard(player1, player2, true, 1, emptyBoard, 0, false);
+    activeGameBoard = new GameBoard(player1, player2, true, 1, emptyBoard, 0, false, dbService);
   }
   
   /**
