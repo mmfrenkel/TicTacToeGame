@@ -1,6 +1,7 @@
 package integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.gson.Gson;
@@ -196,13 +197,38 @@ public class PlayGameTest {
     // Check that gameboard is empty
     assertEquals(true, gameBoard.isEmpty());
   }
+  
+  /**
+   * This is to confirm that the player added was successfully added to the database.
+   */
+  @Test
+  @Order(6)
+  @DisplayName("A player should be able to start a game with a valid type; "
+      + "should be saved in DB.")
+  public void startGameTestDB() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    assertEquals('O', dbGameBoard.getP1().getType());
+
+    // Check that game has not started
+    assertEquals(false, dbGameBoard.isGameStarted());
+
+    // Check that game board is empty
+    assertEquals(true, dbGameBoard.isEmpty());
+  }
 
   /**
    * This is a test case for if Player 1 attempts to make a move on the game board
    * before Player 2 has joined.
    */
   @Test
-  @Order(6)
+  @Order(7)
   @DisplayName("A player cannot make a move until both players have joined the game.")
   public void attemptToMakeMoveTooEarly() {
 
@@ -218,6 +244,28 @@ public class PlayGameTest {
     assertEquals("Game cannot start until there are two players", 
         msg.substring(0, 45));
   }
+  
+  /**
+   * Make sure the database isn't updated after user makes too early of a move.
+   */
+  @Test
+  @Order(8)
+  @DisplayName("Database shouldn't be updated after user makes too early of a move.")
+  public void testMaintainedDbStateAfterTooEarlyMove() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    // Check that game has not started
+    assertEquals(false, dbGameBoard.isGameStarted());
+
+    // Check that game board is empty
+    assertEquals(true, dbGameBoard.isEmpty());
+  }
 
   /**
    * This is a test case to evaluate the response a user receives if they attempt
@@ -225,7 +273,7 @@ public class PlayGameTest {
    * assigned.
    */
   @Test
-  @Order(7)
+  @Order(9)
   @DisplayName("If there is already a player 1 on the board, no one else can join"
       + "as player 1.")
   public void startGameTestDuplicate() {
@@ -239,13 +287,39 @@ public class PlayGameTest {
     assertEquals(400, response.getStatus());
     assertEquals("There is already a Player 1", response.getBody().substring(0, 27));
   }
+  
+  /**
+   * This is to confirm that attempts to add a second player 1 do not overwrite
+   * existing player in DB.
+   */
+  @Test
+  @Order(10)
+  @DisplayName("The original player 1 in the database should persist if there was a "
+      + "second request to also be player 1.")
+  public void testPlayer1PersistsInDatabase() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    assertEquals('O', dbGameBoard.getP1().getType());
+
+    // Check that game has not started
+    assertEquals(false, dbGameBoard.isGameStarted());
+
+    // Check that game board is empty
+    assertEquals(true, dbGameBoard.isEmpty());
+  }
 
   /**
    * This is a test case for the valid addition of a second Player to the game
    * board, who should be assigned the opposite type as Player 1.
    */
   @Test
-  @Order(8)
+  @Order(11)
   @DisplayName("A second player should be able to join a game that has only player 1.")
   public void joinGameTest() {
 
@@ -278,13 +352,37 @@ public class PlayGameTest {
     // Check that gameboard is empty
     assertEquals(true, gameBoard.isEmpty());
   }
+  
+  /**
+   * This is to confirm that a request to add player 2 is persistent in the database.
+   */
+  @Test
+  @Order(12)
+  @DisplayName("Addition of player 2 should persist in the database.")
+  public void testPlayer2PersistsInDataBase() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    assertEquals('X', dbGameBoard.getP2().getType());
+
+    // Check that game has not started
+    assertEquals(true, dbGameBoard.isGameStarted());
+
+    // Check that game board is empty
+    assertEquals(true, dbGameBoard.isEmpty());
+  }
 
   /**
    * This is a test case for the invalid attempt to join a game that already has
    * two players. This should not be allowed.
    */
   @Test
-  @Order(9)
+  @Order(13)
   @DisplayName("If there are already two players, another player cannot join.")
   public void joinGameTestDuplicate() {
 
@@ -296,13 +394,33 @@ public class PlayGameTest {
     assertEquals(400, response.getStatus());
     assertEquals("Sorry, there are already two players", response.getBody().substring(0, 36));
   }
+  
+  /**
+   * This is to confirm that additional requests to join the game do not impact the db
+   * players already existing.
+   */
+  @Test
+  @Order(14)
+  @DisplayName("Attempted addition of other players shouldn't impact the db.")
+  public void testDuplicateJoinGamesDontAffectDB() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    assertEquals('X', dbGameBoard.getP2().getType());
+    assertEquals('O', dbGameBoard.getP1().getType());
+  }
 
   /**
    * This is a test case for an invalid attempt by Player 2 to make the first
    * move, when Player 1 should be the first to make the a move.
    */
   @Test
-  @Order(10)
+  @Order(15)
   @DisplayName("After game has started, Player 1 always makes the first move.")
   public void invalidOrderOfPlay() {
 
@@ -317,6 +435,29 @@ public class PlayGameTest {
     assertEquals(200, response.getStatus());
     assertEquals("Player 1 makes the first move on an empty board", msg.substring(0, 47));
   }
+  
+  /**
+   * This is to confirm that attempts by player 2 to make a move on the 
+   * game board are not persisted to the db.
+   */
+  @Test
+  @Order(16)
+  @DisplayName("Attempted invalid order of play should not show up in db.")
+  public void testInvalidOrderOfPlayerNotShownInDb() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    // Check that game has not started
+    assertEquals(true, dbGameBoard.isGameStarted());
+
+    // Check that game board is empty
+    assertEquals(true, dbGameBoard.isEmpty());
+  }
 
   /**
    * This is a test case for Player 1 making a valid first move on the game board.
@@ -324,7 +465,7 @@ public class PlayGameTest {
    * turn to make a move afterwards.
    */
   @Test
-  @Order(11)
+  @Order(17)
   @DisplayName("If the game has started, Player 1 should be able to make a move.")
   public void testMakeValidMove() {
 
@@ -356,13 +497,40 @@ public class PlayGameTest {
     // Check that it is now player 2's turn
     assertEquals(2, gameBoard.getTurn());
   }
+  
+  
+  /**
+   * This is to confirm that a valid move by player 1 is reflected in the 
+   * database.
+   */
+  @Test
+  @Order(18)
+  @DisplayName("A valid move should be reflected in the database.")
+  public void testPlayer1MoveInDB() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    // Check that gameboard is not empty
+    assertEquals(false, dbGameBoard.isEmpty());
+    
+    // Check that move was made to correct position
+    assertEquals('O', dbGameBoard.getBoardState()[0][0]);
+
+    // Check that it is now player 2's turn
+    assertEquals(2, dbGameBoard.getTurn());
+  }
 
   /**
    * This is a test case for a player attempting to make a move when it is not
    * their turn.
    */
   @Test
-  @Order(12)
+  @Order(19)
   @DisplayName("A player should not be able to make two moves in their turn.")
   public void testInvalidTurn() {
 
@@ -378,13 +546,40 @@ public class PlayGameTest {
     assertEquals("It is not currently your turn.", msg.substring(0, 30));
 
   }
+  
+  /**
+   * This is to confirm that a invalid duplicate move by player 1 
+   * is not reflected in the database.
+   */
+  @Test
+  @Order(20)
+  @DisplayName("A duplicate move should not be stored in the db.")
+  public void testDuplicateMoveNotSavedInDB() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+    
+    // Check that game board is not empty
+    assertEquals(false, dbGameBoard.isEmpty());
+    
+    // this is the position attempted in test #17
+    assertNotEquals('X', dbGameBoard.getBoardState()[0][1]);
+
+    // Check that it is now player 2's turn
+    assertEquals(2, dbGameBoard.getTurn());
+  }
+
 
   /**
    * This is a test case for a player attempting to make a move when the position
    * is already taken.
    */
   @Test
-  @Order(13)
+  @Order(21)
   @DisplayName("A player should not be able to make a move to an occupied position.")
   public void testMoveAttemptedToOccupiedPosition() {
 
@@ -400,13 +595,34 @@ public class PlayGameTest {
     assertEquals("You cannot make a move", msg.substring(0, 22));
 
   }
+  
+  /**
+   * This is to confirm that a player's attempted move to an occupied
+   * position doesn't impact the previous move in the db.
+   */
+  @Test
+  @Order(22)
+  @DisplayName("A request to make a move to an occupied position should not "
+      + "persist in db.")
+  public void testOccupiedMoveNotSavedInDB() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    assertEquals('O', dbGameBoard.getBoardState()[0][0]);
+    assertEquals(2, dbGameBoard.getTurn());
+  }
 
   /**
    * This is a test case for a player attempting to make a move to an invalid
    * location on the gameboard.
    */
   @Test
-  @Order(14)
+  @Order(23)
   @DisplayName("A player should not be able to make a move to an invalid position.")
   public void testMoveAttemptedToInvalidPosition() {
 
@@ -424,10 +640,32 @@ public class PlayGameTest {
   }
   
   /**
+   * This is to confirm that if a  player makes an invalid move, it is
+   * not loaded into the game board.
+   */
+  @Test
+  @Order(24)
+  @DisplayName("A request to make a move to a position off the board should not "
+      + "persist in db.")
+  public void testInvalidMovePositionNotInDb() {
+    
+    HttpResponse<String> gameboard = Unirest
+        .get("http://localhost:8080/gameboardstatus")
+        .asString();
+    
+    // Get the GameBoard that was returned to the user
+    GameBoard dbGameBoard = gson.fromJson(gameboard.getBody(), GameBoard.class);
+
+    assertEquals('O', dbGameBoard.getBoardState()[0][0]);
+    assertEquals(2, dbGameBoard.getTurn());
+  }
+
+  
+  /**
    * This is a test case to make sure that a Player is capable of winning.
    */
   @Test
-  @Order(15)
+  @Order(25)
   @DisplayName("A player should be able to win a game.")
   public void testPlayerCanWinGame() {
 
@@ -480,7 +718,7 @@ public class PlayGameTest {
    * after the game is already won.
    */
   @Test
-  @Order(16)
+  @Order(26)
   @DisplayName("A player should not be able to make moves after a game is won.")
   public void testPlayerCannotMoveAFterGameWon() {
     
@@ -501,7 +739,7 @@ public class PlayGameTest {
    * draw.
    */
   @Test
-  @Order(17)
+  @Order(27)
   @DisplayName("A game should be a draw if all the positions are exhausted and no one has won.")
   public void testGameEndsWithDraw() {
 
@@ -534,7 +772,7 @@ public class PlayGameTest {
    * without error to /newgame, and the gameboard should be cleared.
    */
   @Test
-  @Order(18)
+  @Order(28)
   @DisplayName("If someone goes to / instead of /newgame, redirect "
       + "without error to /newgame.")
   public void newGameTestRedirectNewGame() {
@@ -566,7 +804,7 @@ public class PlayGameTest {
   
   // ----------- New Tests for Assignment 3: Adding Robustness Tests ---------- //
   @Test
-  @Order(19)
+  @Order(29)
   @DisplayName("Every time a new game starts, the database tables must be cleaned.")
   public void testNewGameClearsDb() {
     
@@ -613,7 +851,7 @@ public class PlayGameTest {
   }
   
   @Test
-  @Order(20)
+  @Order(30)
   @DisplayName("If the application crashes after a move, the application must "
       + "reboot with the game's last move.")
   public void testRebootWithLastMove() throws DbServiceException {
@@ -666,7 +904,7 @@ public class PlayGameTest {
   }
   
   @Test
-  @Order(21)
+  @Order(31)
   @DisplayName("If the application crashes after a draw game, it must "
       + "reboot to show the draw game board.")
   public void testRebootDrawGame() throws DbServiceException {
@@ -704,7 +942,7 @@ public class PlayGameTest {
   }
   
   @Test
-  @Order(22)
+  @Order(32)
   @DisplayName("If the application crashes after a game has ended with a winner, it must "
       + "reboot to show the draw game board.")
   public void testRebootWinningGame() throws DbServiceException {
@@ -781,7 +1019,7 @@ public class PlayGameTest {
   }
   
   @Test
-  @Order(23)
+  @Order(33)
   @DisplayName("If player 1 had started a game and the application crashed, "
       + "it should reboot with player 1 as part of gameboard")
   public void testRebootWithPlayer1() throws DbServiceException {
@@ -817,7 +1055,7 @@ public class PlayGameTest {
   }
   
   @Test
-  @Order(24)
+  @Order(34)
   @DisplayName("If player 2 had joined the game and the application crashed, the "
       + "application should reboot with player 2 as part of the game and the "
       + "corresponding board game status")
@@ -858,7 +1096,7 @@ public class PlayGameTest {
   }
   
   @Test
-  @Order(25)
+  @Order(35)
   @DisplayName("If player 2 had joined the game and the application crashed, the "
       + "application should reboot with player 2 as part of the game and the "
       + "corresponding board game status")
@@ -889,7 +1127,7 @@ public class PlayGameTest {
   }
   
   @Test
-  @Order(26)
+  @Order(36)
   @DisplayName("If the application crashes after a player attempts an invalid move, "
       + "the application must reboot with the last valid move state")
   public void testRebootAfterInvalidMove() throws DbServiceException {

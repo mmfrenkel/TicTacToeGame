@@ -558,6 +558,7 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
    * @throws DbServiceException if commit failed
    */
   public void commit() throws DbServiceException {
+    
     if (sqliteConn == null) {
       return;
     }

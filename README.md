@@ -70,7 +70,7 @@ There is a test suite built for this project, which includes both Junit unit tes
 ```
 $ mvn test
 ```
-All tests (currently 177 total, 128 unit tests and 49 integration tests) should pass. Code testing coverage was checked using the Emma plugin in Eclipse. Test coverage for the controller and model classes is nearly 100%; code that remains untested is either (1) unreachable (not possible to test) or (b) template code and/or previously implemented code as part of this assignment (i.e., web socket code). Test coverage for the database service class covers all custom logic, but excludes testing errors prompted at runtime by JDBC/SQLite at runtime, as these were not easily mocked.
+All tests (currently 187 total, 128 unit tests and 59 integration tests) should pass. Code testing coverage was checked using the Emma plugin in Eclipse. Test coverage for the controller and model classes is nearly 100%; code that remains untested is either (1) unreachable (not possible to test) or (b) template code and/or previously implemented code as part of this assignment (i.e., web socket code). Test coverage for the database service class covers all custom logic, but excludes testing errors prompted at runtime by JDBC/SQLite at runtime, as these were not easily mocked.
 
 This project uses Checkstyle as a tool for ensuring that this code adheres to industry coding standards. Run the checkstyle tool by issuing the command below and reviewing the output found within `target/site/images/checkstyle.html`.
 ```
