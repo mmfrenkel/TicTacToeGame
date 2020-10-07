@@ -21,7 +21,7 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
   
   private Connection sqliteConn;
   
-  static String defaultDatabase = "tictactoe.db";
+  String defaultDatabase = "tictactoe.db";
   
   private static Logger logger = LoggerFactory.getLogger(TicTacToeController.class);
   
