@@ -21,10 +21,26 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
   
   private Connection sqliteConn;
   
-  static final String defaultDatabase = "tictactoe.db";
+  static String defaultDatabase = "tictactoe.db";
   
   private static Logger logger = LoggerFactory.getLogger(TicTacToeController.class);
-
+  
+  /**
+   * Default Constructor, no arguments.
+   */
+  public TicTacToeSqliteDbService() {
+  }
+  
+  /**
+   * Provides an alternative constructor to allow specification of where the
+   * database file should be.
+   * 
+   * @param database Name of database. May be a full path to a *.db file
+   */
+  public TicTacToeSqliteDbService(String database) {
+    defaultDatabase = database;
+  }
+ 
   /**
    * Connect to an existing database; if the database doesn't already exist, then
    * it will be created. The database exists in the current directory.
@@ -58,7 +74,8 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
       // setup database to enforce foreign keys
       SQLiteConfig config = new SQLiteConfig();  
       config.enforceForeignKeys(true);  
-      sqliteConn = DriverManager.getConnection("jdbc:sqlite:tictactoe.db", config.toProperties());
+      sqliteConn = DriverManager.getConnection("jdbc:sqlite:" + dbLocation, 
+          config.toProperties());
 
     } catch (Exception e) {
       logger.error(e.getClass().getName() + ": " + e.getMessage());
@@ -173,6 +190,11 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
    *                            database information
    */
   public GameBoard restoreGameBoard(int gameId) throws DbServiceException {
+    
+    if (sqliteConn == null) {
+      throw new DbServiceException("Please establish DB connection before "
+          + "requesting DB action.");
+    }
 
     // Start from a fresh game board
     GameBoard gb = new GameBoard();
@@ -254,7 +276,7 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
    *                  with
    */
   public void saveGameState(GenericGameBoard gameboard, int gameId) throws DbServiceException {
-
+    
     String sqlStarted = ""
         + "UPDATE games\n"
         + "SET has_started = " + gameboard.isGameStarted() + " \n"
@@ -468,6 +490,8 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
   /**
    * Creates the 'games' table, which holds the id of the game and if there is a
    * winner or a draw, if it doesn't already exist.
+   * 
+   * @throws DbServiceException if table could not be created
    */
   private void createGamesTable() throws DbServiceException {
 
@@ -487,6 +511,8 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
    * Creates the 'players' table, which holds the 
    * id and the player type for each player in the game,
    * if it doesn't already exist.
+   * 
+   * @throws DbServiceException if table could not be created
    */
   private void createPlayersTable() throws DbServiceException {
 
@@ -505,6 +531,8 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
    * Creates the 'moves' table, which holds each 
    * move that has been submitted by a user over
    * the course of a game,  if it doesn't already exist.
+   * 
+   * @throws DbServiceException if table could not be created
    */
   private void createMovesTable() throws DbServiceException {
       
@@ -526,6 +554,8 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
   /**
    * Call this function to officially commit changes to the database
    * associated with a specific transaction.
+   * 
+   * @throws DbServiceException if commit failed
    */
   public void commit() throws DbServiceException {
     if (sqliteConn == null) {
@@ -537,7 +567,6 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
       
     } catch (SQLException e) {
       logger.error(e.getClass().getName() + ": " + e.getMessage());
-      rollback();
       throw new DbServiceException("Could not commit changes associated with " 
           + "transaction to the database");
       
@@ -545,6 +574,7 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
       try {
         if (sqliteConn != null) {
           sqliteConn.close();
+          sqliteConn = null;
         }
         
       } catch (SQLException e2) {
@@ -557,12 +587,15 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
   /**
    * Call this function to officially roll-back changes to the database
    * associated with a specific transaction.
+   * 
+   * @throws DbServiceException if something happened with DB connection
    */
   public void close() throws DbServiceException {
 
     try {
       if (sqliteConn != null) {
         sqliteConn.close();
+        sqliteConn = null;
       }
     } catch (SQLException e) {
       logger.error(e.getClass().getName() + ": " + e.getMessage());
@@ -570,31 +603,6 @@ public class TicTacToeSqliteDbService implements TicTacToeDbService {
     }
   }
   
-  /**
-   * Call this function to officially roll-back changes to the database
-   * associated with a specific transaction.
-   */
-  public void rollback() throws DbServiceException {
-    try {
-      sqliteConn.rollback();
-      
-    } catch (SQLException e) {
-      logger.error(e.getClass().getName() + ": " + e.getMessage());
-      throw new DbServiceException("Could not rollback changes associated "
-          + "with transaction.");
-    
-    } finally {
-      try {
-        if (sqliteConn != null) {
-          sqliteConn.close();
-        }
-      } catch (SQLException e2) {
-        logger.error(e2.getClass().getName() + ": " + e2.getMessage());
-        throw new DbServiceException("Could not close SQLite db connection.");
-      }
-    }
-  }
-
   /**
    * Executes update statement on SQLite database utilizing the SQL statement
    * provided. Use this method for create, update, and delete SQL statements.

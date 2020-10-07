@@ -2,13 +2,9 @@ package integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import controllers.PlayGame;
-import controllers.TicTacToeController;
-import io.javalin.http.Context;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
@@ -21,9 +17,8 @@ import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import util.DbServiceException;
+
 
 @TestMethodOrder(OrderAnnotation.class)
 public class PlayGameTest {
@@ -32,9 +27,10 @@ public class PlayGameTest {
 
   /**
    * Starts the server once, before any tests run.
+   * @throws DbServiceException If there was an issue establishing the database
    */
   @BeforeAll
-  public static void init() {
+  public static void init() throws DbServiceException {
     PlayGame.main(null);
   }
 
@@ -620,7 +616,7 @@ public class PlayGameTest {
   @Order(20)
   @DisplayName("If the application crashes after a move, the application must "
       + "reboot with the game's last move.")
-  public void testRebootWithLastMove() {
+  public void testRebootWithLastMove() throws DbServiceException {
     
     // ------ Setup a Game, in the middle of play ----- //
     HttpResponse<String> response = Unirest
@@ -673,7 +669,7 @@ public class PlayGameTest {
   @Order(21)
   @DisplayName("If the application crashes after a draw game, it must "
       + "reboot to show the draw game board.")
-  public void testRebootDrawGame() {
+  public void testRebootDrawGame() throws DbServiceException {
     
     // ------ Setup a Draw Game ------ //
     
@@ -711,7 +707,7 @@ public class PlayGameTest {
   @Order(22)
   @DisplayName("If the application crashes after a game has ended with a winner, it must "
       + "reboot to show the draw game board.")
-  public void testRebootWinningGame() {
+  public void testRebootWinningGame() throws DbServiceException {
     
     // ------ Setup a Winning Game ------ //
     
@@ -788,7 +784,7 @@ public class PlayGameTest {
   @Order(23)
   @DisplayName("If player 1 had started a game and the application crashed, "
       + "it should reboot with player 1 as part of gameboard")
-  public void testRebootWithPlayer1() {
+  public void testRebootWithPlayer1() throws DbServiceException {
     
     HttpResponse<String> response = Unirest
         .get("http://localhost:8080/")
@@ -825,7 +821,7 @@ public class PlayGameTest {
   @DisplayName("If player 2 had joined the game and the application crashed, the "
       + "application should reboot with player 2 as part of the game and the "
       + "corresponding board game status")
-  public void testRebootWithPlayer2() {
+  public void testRebootWithPlayer2() throws DbServiceException {
     
     HttpResponse<String> response = Unirest
         .get("http://localhost:8080/")
@@ -866,7 +862,7 @@ public class PlayGameTest {
   @DisplayName("If player 2 had joined the game and the application crashed, the "
       + "application should reboot with player 2 as part of the game and the "
       + "corresponding board game status")
-  public void testRebootAfterNewGame() {
+  public void testRebootAfterNewGame() throws DbServiceException {
     
     // set to a new game
     HttpResponse<String> response = Unirest
@@ -896,7 +892,7 @@ public class PlayGameTest {
   @Order(26)
   @DisplayName("If the application crashes after a player attempts an invalid move, "
       + "the application must reboot with the last valid move state")
-  public void testRebootAfterInvalidMove() {
+  public void testRebootAfterInvalidMove() throws DbServiceException {
     
     // Create an active game and play a few moves
     HttpResponse<String> response = Unirest
@@ -943,7 +939,7 @@ public class PlayGameTest {
     assertEquals('X', gameBoard.getBoardState()[2][0]);
     assertEquals(false, gameBoard.isEmpty());
   }
-  
+
   /**
    * Helper function to set game board into a draw configuration.
    * Returns the last response result.

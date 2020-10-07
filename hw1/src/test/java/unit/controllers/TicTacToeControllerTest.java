@@ -1,9 +1,13 @@
 package unit.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -12,6 +16,7 @@ import controllers.TicTacToeController;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import models.GameBoard;
+import models.GameBoardInternalError;
 import models.Move;
 import models.Player;
 import org.junit.jupiter.api.Assertions;
@@ -32,6 +37,8 @@ class TicTacToeControllerTest {
   
   private GameBoard activeGameBoard;
   
+  private GameBoard gameBoardMock;
+  
   private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create(); 
   
   /**
@@ -48,6 +55,7 @@ class TicTacToeControllerTest {
     TicTacToeSqliteDbService dbService = mock(TicTacToeSqliteDbService.class);
     
     // setup mocks
+    gameBoardMock = mock(GameBoard.class);
     ctx = mock(Context.class);
     mockTttcontroller = Mockito.spy(new TicTacToeController(dbService));
     
@@ -365,6 +373,131 @@ class TicTacToeControllerTest {
     
     // assert multiple times in this case, to avoid 
     verify(ctx).status(200);
+  }
+  
+  /**
+   * Test that loading a game board is successful.
+   */
+  @Test()
+  @DisplayName("A gameboard database/internal error is reraised by the controller.")
+  void testLoadGame() throws GameBoardInternalError {
+    
+    TicTacToeController controller = new TicTacToeController(gameBoardMock);
+    
+    when(gameBoardMock.getMostRecentDbState()).thenReturn(new GameBoard());
+    
+    controller.loadGameBoard();
+    
+    GameBoard expected = new GameBoard();
+    
+    assertEquals(expected.toString(), controller.getGameBoard().toString());
+    
+  }
+  
+  /**
+   * Test that a game board database/internal error is re-raised by the controller.
+   */
+  @Test()
+  @DisplayName("A gameboard database/internal error is reraised by the controller.")
+  void testLoadGameError() throws GameBoardInternalError {
+    
+    TicTacToeController controller = new TicTacToeController(gameBoardMock);
+    
+    doThrow(new GameBoardInternalError("Exception thrown"))
+      .when(gameBoardMock).getMostRecentDbState();
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      controller.loadGameBoard();
+    });
+    
+  }
+  
+  /**
+   * Test what happens when reseting the board game fails.
+   */
+  @Test()
+  @DisplayName("A gameboard database/internal error results in status of 500.")
+  void testResetGameBoard() throws GameBoardInternalError {
+    
+    TicTacToeController controller = new TicTacToeController(gameBoardMock);
+    
+    doThrow(new GameBoardInternalError("Exception thrown"))
+      .when(gameBoardMock).resetGameboard();
+    
+    controller.serveNewGame(ctx);
+    verify(ctx).status(500);
+  }
+  
+  /**
+   * Test what happens when reseting the board game fails on starting new game.
+   */
+  @Test()
+  @DisplayName("A gameboard database/internal error results in status of 500 - Player 1.")
+  void testStartGameError() throws GameBoardInternalError {
+    
+    when(ctx.formParam("type")).thenReturn("X");
+    
+    doThrow(new GameBoardInternalError("Exception thrown"))
+      .when(gameBoardMock).saveP1(any());
+    
+    when(gameBoardMock.acceptedTypes()).thenReturn(Arrays.asList('X', 'O'));
+
+    TicTacToeController controller = new TicTacToeController(gameBoardMock);
+    controller.startGame(ctx);
+    verify(ctx).status(500);
+  }
+  
+  /**
+   * Test what happens when reseting the board game fails on starting new game.
+   */
+  @Test()
+  @DisplayName("A gameboard database/internal error results in status of 500 - Player 2.")
+  void testAddPlayerError() throws GameBoardInternalError {
+    
+    doThrow(new GameBoardInternalError("Exception thrown"))
+      .when(gameBoardMock).autoSetP2();
+    
+    when(gameBoardMock.getP1()).thenReturn(new Player('X', 1));
+    
+    TicTacToeController controller = new TicTacToeController(gameBoardMock);
+    controller.addSecondPlayer(ctx);
+    verify(ctx).status(500);
+  }
+  
+  /**
+   * Test what happens when reseting the board game fails on starting new game.
+   */
+  @Test()
+  @DisplayName("A gameboard database/internal error results in status of 500 - Move.")
+  void testProcessPlayerMove() throws GameBoardInternalError {
+    
+    when(gameBoardMock.getP1()).thenReturn(new Player('X', 1));
+    when(gameBoardMock.getP2()).thenReturn(new Player('O', 2));
+    
+    mockTttcontroller.setGameBoard(gameBoardMock);
+    Mockito.doReturn("1").when(mockTttcontroller).parsePlayerIdFromPathParam(ctx);
+
+    when(ctx.formParam("x")).thenReturn("2");
+    when(ctx.formParam("y")).thenReturn("1");
+    
+    doThrow(new GameBoardInternalError("Exception thrown"))
+      .when(gameBoardMock).processPlayerMove(any());
+    
+    mockTttcontroller.processPlayerMove(ctx);
+    verify(ctx).status(500);
+  }
+  
+  
+  /**
+   * Test secondary constructor.
+   */
+  @Test()
+  @DisplayName("Use secondary constructor to establish controller with Gameboard")
+  void testSecondaryConstructor() {
+    
+    TicTacToeController tttcontroller = new TicTacToeController(activeGameBoard);
+    
+    assertEquals(activeGameBoard.toString(), tttcontroller.getGameBoard().toString());
   }
 }
 

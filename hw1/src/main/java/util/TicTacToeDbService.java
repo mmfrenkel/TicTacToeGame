@@ -32,8 +32,6 @@ public interface TicTacToeDbService {
   
   public void commit() throws DbServiceException;
   
-  public void rollback() throws DbServiceException;
-  
   public void close() throws DbServiceException;
 
 }

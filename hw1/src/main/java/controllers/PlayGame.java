@@ -25,22 +25,16 @@ public class PlayGame {
    * Main method of the application.
    * 
    * @param args Command line arguments
+   * @throws DbServiceException  when there is an issue establishing the database
    */
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws DbServiceException {
 
     logger.info("Starting application...");
 
     dbService = new TicTacToeSqliteDbService();
     
-    try {
-      // create database tables, if they do not already exist
-      logger.info("Creating database tables, if necessary...");
-      dbService.createDatabasesTables();
-      
-    } catch (DbServiceException dbse) {
-      System.err.println(dbse.getClass().getName() + ": " + dbse.getMessage());
-      System.exit(1);
-    }
+    logger.info("Creating database tables, if necessary...");
+    dbService.createDatabasesTables();
     
     tttcontroller = new TicTacToeController();
 
@@ -50,7 +44,6 @@ public class PlayGame {
     }).start(PORT_NUMBER);
     
     app.before(ctx -> {
-      logger.info("Loading game board...");
       tttcontroller.loadGameBoard();
     });
 

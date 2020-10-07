@@ -2,7 +2,9 @@ package unit.models;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import models.GameBoard;
 import models.GameBoardInternalError;
@@ -15,12 +17,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import util.DbServiceException;
 import util.TicTacToeSqliteDbService;
 
 class GameBoardTest {
 
   private GameBoard emptyTestBoard;
   private GameBoard activeTestBoard;
+  private TicTacToeSqliteDbService dbService;
   private char[][] emptyBoard = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
   private Player player1 = new Player('X', 1);
   private Player player2 = new Player('O', 2);
@@ -32,7 +36,7 @@ class GameBoardTest {
   void setGameboard() {
     
     // set up a mock for the database service
-    TicTacToeSqliteDbService dbService = mock(TicTacToeSqliteDbService.class);
+    dbService = mock(TicTacToeSqliteDbService.class);
     
     this.emptyTestBoard = new GameBoard(dbService);
     this.activeTestBoard = new GameBoard(player1, player2, true, 1, 
@@ -882,5 +886,326 @@ class GameBoardTest {
 
     activeTestBoard.setGameStarted(true);
     assert true; // we are only checking that no exception is thrown
+  }
+  
+  /**
+   * Test that it is possible to set the game as started if both
+   * players are present.
+   */
+  @Test()
+  @DisplayName("Resetting the board game should remove all moves and all players")
+  void testResetGameboard() throws GameBoardInternalError {
+
+    char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' }, { 'X', 0, 'X' } };
+    activeTestBoard.setBoardState(boardState);
+    
+    activeTestBoard.resetGameboard();
+    GameBoard gb = new GameBoard();
+    
+    assertEquals(gb.toString(), activeTestBoard.toString());
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue reseting gb.
+   */
+  @Test()
+  @DisplayName("GameBoardInternalError should be thrown if there was an issue "
+      + "resetting the db (#1)")
+  void testResetGameboardError() throws GameBoardInternalError, DbServiceException {
+
+    char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' }, { 'X', 0, 'X' } };
+    activeTestBoard.setBoardState(boardState);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).createNewGame(1);
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.resetGameboard();
+    });
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue reseting gb, double error.
+   */
+  @Test()
+  @DisplayName("GameBoardInternalError should be thrown if there was an issue "
+      + "resetting the db (#2)")
+  void testResetGameboardErrorDouble() throws GameBoardInternalError, DbServiceException {
+
+    char[][] boardState = { { 'O', 'X', 'O' }, { 'X', 'O', 'X' }, { 'X', 0, 'X' } };
+    activeTestBoard.setBoardState(boardState);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).createNewGame(1);
+    
+    doThrow(new DbServiceException("Exception thrown"))
+    .when(dbService).close();
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.resetGameboard();
+    });
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue committing move.ion 
+   */
+  @Test()
+  @DisplayName("If there was an issue saving the move, it should result in "
+      + "a GameBoardInternalError (#1)")
+  void testCommitMoveError() throws GameBoardInternalError, DbServiceException {
+    
+    // mock the db service throwing an error
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).commit();
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.commitMove();
+    });
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue committing move.ion 
+   */
+  @Test()
+  @DisplayName("If there was an issue saving the move, it should result in "
+      + "a GameBoardInternalError (#2)")
+  void testCommitMoveErrorDouble() throws GameBoardInternalError, DbServiceException {
+    
+    // mock the db service throwing an error
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).commit();
+    
+    doThrow(new DbServiceException("Exception thrown"))
+    .when(dbService).close();
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.commitMove();
+    });
+  }
+  
+  /**
+   * Test commitMove with mock db should be successful.
+   */
+  @Test()
+  @DisplayName("There should be no issues saving the move if the db is mocked")
+  void testcommitMoveSuccess() throws GameBoardInternalError, DbServiceException {
+    
+    activeTestBoard.commitMove();
+    
+    // we just want to see that nothing fails
+    assert true; 
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue committing move.
+   */
+  @Test()
+  @DisplayName("Player 1 should save successfully")
+  void testSaveP1() throws GameBoardInternalError {
+    
+    emptyTestBoard.saveP1(player1);
+    
+    assertEquals(player1, emptyTestBoard.getP1());
+    assertEquals(1, emptyTestBoard.getTurn());
+    
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue committing player to db, single exception.
+   */
+  @Test()
+  @DisplayName("An error saving player one to db should yield a GameboardInternalError")
+  void testSaveP1Error() throws GameBoardInternalError, DbServiceException {
+    
+    emptyTestBoard.saveP1(player1);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).savePlayer(emptyTestBoard.getP1(), 1);
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      emptyTestBoard.saveP1(player1);
+    });
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue committing player to db, double exception.
+   */
+  @Test()
+  @DisplayName("An error saving player one to db should yield a GameboardInternalError")
+  void testSaveP1ErrorDouble() throws GameBoardInternalError, DbServiceException {
+    
+    emptyTestBoard.saveP1(player1);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).savePlayer(emptyTestBoard.getP1(), 1);
+    
+    doThrow(new DbServiceException("Exception thrown"))
+    .when(dbService).close();
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      emptyTestBoard.saveP1(player1);
+    });
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue committing player to db, single exception.
+   */
+  @Test()
+  @DisplayName("An error saving player two to db should yield a GameboardInternalError")
+  void testAutoSetP2Error() throws GameBoardInternalError, DbServiceException {
+    
+    emptyTestBoard.saveP1(player1);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).saveGameState(emptyTestBoard, 1);
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      emptyTestBoard.autoSetP2();
+    });
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue committing player to db, double exception.
+   */
+  @Test()
+  @DisplayName("An error saving player two to db should yield a GameboardInternalError")
+  void testAutoSetP2ErrorDouble() throws GameBoardInternalError, DbServiceException {
+    
+    emptyTestBoard.saveP1(player1);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).saveGameState(emptyTestBoard, 1);
+    
+    doThrow(new DbServiceException("Exception thrown"))
+    .when(dbService).close();
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      emptyTestBoard.autoSetP2();
+    });
+  }
+  
+  /**
+   * Auto-setting P2 without P1 raises InvalidGameBoardConfigurationException.
+   */
+  @Test()
+  @DisplayName("An error saving player two to db should yield a "
+      + "InvalidGameBoardConfigurationException")
+  void testAutoSetP2WithoutP1() {
+
+    Assertions.assertThrows(InvalidGameBoardConfigurationException.class, () -> {
+      emptyTestBoard.autoSetP2();
+    });
+  }
+  
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue saving move to db.
+   */
+  @Test()
+  @DisplayName("An error saving move to db should yield a GameboardInternalError")
+  void testAutoSetMoveError() throws GameBoardInternalError, DbServiceException {
+    
+    Move move = new Move(player1, 0, 2);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).saveValidMove(move, 1);
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.processPlayerMove(move);
+    });
+  }
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue saving move to db, double exception.
+   */
+  @Test()
+  @DisplayName("An error saving move to db should yield a GameboardInternalError")
+  void testAutoSetMoveErrorDouble() throws GameBoardInternalError, DbServiceException {
+    
+    Move move = new Move(player1, 0, 2);
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).saveValidMove(move, 1);
+    
+    doThrow(new DbServiceException("Exception thrown"))
+    .when(dbService).close();
+    
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.processPlayerMove(move);
+    });
+  }
+  
+  /**
+   * Test get the most recent state.
+   */
+  @Test()
+  @DisplayName("Test get most recent state; should be succesful")
+  void testGetMostRecentGameboard() throws GameBoardInternalError, DbServiceException {
+   
+    when(dbService.restoreMostRecentGameBoard()).thenReturn(new GameBoard());
+    
+    GameBoard result = activeTestBoard.getMostRecentDbState();
+    GameBoard expected = new GameBoard();
+    
+    assertEquals(expected.toString(), result.toString());
+  }
+  
+  /**
+   * Test get the most recent state with error thrown by db.
+   */
+  @Test()
+  @DisplayName("Test get most recent state; error thrown by db")
+  void testGetMostRecentGbError() throws GameBoardInternalError, DbServiceException {
+   
+    when(dbService.restoreMostRecentGameBoard()).thenReturn(new GameBoard());
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).restoreMostRecentGameBoard();
+   
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.getMostRecentDbState();
+    });
+  }
+  
+  /**
+   * Test get the most recent state with error thrown by db, double error.
+   */
+  @Test()
+  @DisplayName("Test get most recent state; error thrown by db")
+  void testGetMostRecentGbErrorDouble() throws GameBoardInternalError, DbServiceException {
+   
+    when(dbService.restoreMostRecentGameBoard()).thenReturn(new GameBoard());
+    
+    // mock the db service throwing an error;
+    doThrow(new DbServiceException("Exception thrown"))
+      .when(dbService).restoreMostRecentGameBoard();
+    
+    doThrow(new DbServiceException("Exception thrown"))
+    .when(dbService).close();
+   
+    Assertions.assertThrows(GameBoardInternalError.class, () -> {
+      activeTestBoard.getMostRecentDbState();
+    });
+  }
+  
+  
+  /**
+   * Test GameBoardInternal Error sent when db issue saving move to db, double exception.
+   */
+  @Test()
+  @DisplayName("There should be 3 columns and 3 rows on a TicTacToe gameboard")
+  void testGameBoardSize() {
+    
+    assertEquals(3, GameBoard.getColumns());
+    assertEquals(3, GameBoard.getRows());
   }
 }

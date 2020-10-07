@@ -272,9 +272,7 @@ public class GameBoard implements GenericGameBoard {
    * @throws GameBoardInternalError if any issue occurred committing the transaction.
    */
   public void commitMove() throws GameBoardInternalError {
-    if (dbService == null) {
-      return;
-    }
+
     try {
       dbService.commit();
     } catch (DbServiceException e) {
@@ -532,6 +530,12 @@ public class GameBoard implements GenericGameBoard {
    * @throws GameBoardInternalError if there was an error updating the database
    */
   public void autoSetP2() throws GameBoardInternalError {
+    
+    if (getP1() == null) {
+      throw new InvalidGameBoardConfigurationException("Cannot autoset player 2 until "
+          + "player 1 also exists.");
+    }
+    
     char playerType = getP1().getType() == 'X' ? 'O' : 'X';
     Player p2 = new Player(playerType, 2);
     setP2(p2);
